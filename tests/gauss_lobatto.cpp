@@ -10,19 +10,19 @@ double f(double x)
 
 bool test_gauss_lobatto()
 {
-    auto [x, w] = gauss_lobatto<double>(9);
+    quad_rule a = gauss_lobatto<double>(9);
 
     double I = 0;
-    for (int i=0; i < x.size(); ++i)
-        I += f(x[i])*w[i];
+    for (int i=0; i < a.x.size(); ++i)
+        I += f(a.x[i])*a.w[i];
     
     double e1 = std::abs(I - 2*boost::math::cyl_bessel_i(0,1.0));
 
-    auto [y, c] = gauss_lobatto<double>(10);
+    quad_rule b = gauss_lobatto<double>(10);
 
     I = 0;
-    for (int i=0; i < y.size(); ++i)
-        I += f(y[i]) * c[i];
+    for (int i=0; i < b.x.size(); ++i)
+        I += f(b.x[i]) * b.w[i];
     
     double e2 = std::abs(I - 2*boost::math::cyl_bessel_i(0,1.0));
 

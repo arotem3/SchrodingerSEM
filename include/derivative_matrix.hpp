@@ -2,44 +2,37 @@
 #define DERIVATIVE_MATRIX_HPP
 
 #include <armadillo>
-#include <vector>
 
+// computes the derivative operator for a set of points x based on Lagrange
+// polynomial interpolation on those points.
+// algorithm 37 in:
+// D. A. Kopriva. Implementing Spectral Methods for Partial Differential
+// Equations: Algorithms for Scientists and Engineers. Scientific computation.
+// Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
 template <typename real>
-std::vector<real> barycentric_weights(const std::vector<real>& x)
+arma::Mat<real> derivative_matrix(const arma::Col<real>& x)
 {
     u_long n = x.size();
 
-    std::vector<real> w(n, 0);
+    // computes the barycentric weights of the interpolating polynomials.
+    arma::Col<real> w(n, arma::fill::ones);
     for (u_long i=0; i < n; ++i)
     {
-        w[i] = 1;
         for (u_long j=0; j < n; ++j)
             if (i != j)
                 w[i] *= x[i] - x[j];
         w[i] = 1 / w[i];
     }
-
-    return w;
-}
-
-template <typename real>
-arma::Mat<real> derivative_matrix(const std::vector<real>& x)
-{
-    auto w = barycentric_weights<real>(x);
-
-    u_long n = x.size();
+    
     arma::Mat<real> D(n, n, arma::fill::zeros);
 
     for (u_long i=0; i < n; ++i)
-    {
-        D.at(i, i) = 0;
         for (u_long j=0; j < n; ++j)
             if (j != i)
             {
                 D.at(i, j) = (w[j] / w[i]) / (x[i] - x[j]);
                 D.at(i, i) -= D.at(i, j);
             }
-    }
 
     return D;
 }

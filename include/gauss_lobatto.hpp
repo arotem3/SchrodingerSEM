@@ -5,7 +5,7 @@
 #include <cmath>
 #include <tuple>
 #include <concepts>
-
+#include <armadillo>
 #include <boost/math/special_functions/legendre.hpp>
 
 // extern to lapack routine dsteqr for eigevalue decomposition of symmetric
@@ -24,7 +24,23 @@ extern "C" int dsteqr_(char* COMPZ, int* N, double* D, double* E, double* Z, int
 extern "C" int ssteqr_(char*, int*, float*, float*, float*, int*, float*, int*);
 
 template <std::floating_point real>
-std::pair<std::vector<real>, std::vector<real>> gauss_lobatto(int n)
+struct quad_rule
+{
+    arma::Col<real> x;
+    arma::Col<real> w;
+};
+
+// computes the Legendre-Gauss-Lobatto quadrature rule for polynomials of degree
+// n, that is, it returns a quad_rule with n+1 nodes (and n+1 weights). Rules
+// for n = 1, ... 8 are cached, higher order rules are computed using
+// Golub-Welsch algorithm for finding roots of orthogonal polynomials, and
+// refined using Newton's method. The interior nodes are roots of P(n-1,1,1)
+// where P(n,a,b) is the Jacobi polynomial of order n with weights a and b.
+// see:
+// Gene H. Golub, and John H. Welsch. 1969. “Calculation of Gauss Quadrature
+// Rules.” Mathematics of Computation 23 (106): 221-s10. doi:10.2307/2004418.
+template <std::floating_point real>
+quad_rule<real> gauss_lobatto(int n)
 {
     if (n < 1)
         throw std::invalid_argument("gauss_lobatto error: require n >= 1, but n =" + std::to_string(n) + ".");
@@ -41,9 +57,9 @@ std::pair<std::vector<real>, std::vector<real>> gauss_lobatto(int n)
         {8, {-1, -0.899757995411460, -0.677186279510738, -0.363117463826178, 0, 0.363117463826178, 0.677186279510738, 0.899757995411460, 1}}
     };
     
-    std::vector<real> x;
+    quad_rule<real> q;
     if (lgl.contains(n))
-        x = lgl.at(n);
+        q.x = lgl.at(n);
     else
     {
         // use the Golub-Welsch algorithm
@@ -64,7 +80,8 @@ std::pair<std::vector<real>, std::vector<real>> gauss_lobatto(int n)
             ssteqr_(&only_eigvals, &N, D, E, nullptr, &LDZ_dummy, nullptr, &info);
         else
             dsteqr_(&only_eigvals, &N, D, E, nullptr, &LDZ_dummy, nullptr, &info);
-        
+
+        std::vector<real> x;
         for (int i=0; i < N/2; ++i)
             x.push_back(D[i]);
         
@@ -76,14 +93,12 @@ std::pair<std::vector<real>, std::vector<real>> gauss_lobatto(int n)
 
         // refine roots with Newton's method
         for (real& z : x)
-        {
             for (int i=0; i < 2; ++i) // just two iterations, shouldn't need much refinement
             {
                 real q = boost::math::legendre_p<real>(n+1, z) - boost::math::legendre_p<real>(n-1, z);
                 real dq = boost::math::legendre_p_prime<real>(n+1,z) - boost::math::legendre_p_prime<real>(n-1, z);
                 z -= q/dq;
             }
-        }
 
         if (n%2 == 0) // zero is one of the roots for (n+1) odd.
             x.push_back(0);
@@ -94,18 +109,20 @@ std::pair<std::vector<real>, std::vector<real>> gauss_lobatto(int n)
 
         x.emplace(x.begin(), -1);
         x.push_back(1);
+
+        q.x = x;
     }
 
-    std::vector<real> w(n+1, 0);
-    w[0] = 2.0 / (n*(n+1));
-    w[n] = w[0];
+    q.w.set_size(n+1);
+    q.w[0] = 2.0 / (n*(n+1));
+    q.w[n] = q.w[0];
     for (int i=0; i < n/2+1; ++i)
     {
-        w[i] = 2.0 / (n*(n+1) * std::pow(boost::math::legendre_p(n, x[i]),2));
-        w[n-i] = w[i];
+        q.w[i] = 2.0 / (n*(n+1) * std::pow(boost::math::legendre_p(n, q.x[i]),2));
+        q.w[n-i] = q.w[i];
     }
 
-    return std::make_pair(std::move(x), std::move(w));
+    return q;
 }
 
 #endif
