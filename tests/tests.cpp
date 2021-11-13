@@ -6,6 +6,9 @@ bool test_Quad();
 bool test_glaplace();
 bool test_load_mesh();
 bool test_distribute_mesh();
+bool test_solution_t();
+bool test_pcg();
+bool test_minres();
 
 int main()
 {
@@ -17,6 +20,9 @@ int main()
     success = success && test_glaplace();
     success = success && test_load_mesh();
     success = success && test_distribute_mesh();
+    success = success && test_solution_t();
+    success = success && test_pcg();
+    success = success && test_minres();
 
     if (success)
         std::cout << "all tests passed! :)\n";
