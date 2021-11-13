@@ -16,6 +16,8 @@
 template <std::floating_point real>
 class SpMesh
 {
+friend SpMesh<real> load_mesh<SpMesh<real>>(int, const std::string&);
+
 private:
     int _n;
 
@@ -34,6 +36,11 @@ public:
     {
         static const int smap[] = {0, N-1, N-1, 0};
         return smap[side-1];
+    }
+
+    int dof() const
+    {
+        return nodes.size() + edges.size()*(N-2) + elements.size()*(N-2)*(N-2);
     }
 };
 

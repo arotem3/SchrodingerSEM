@@ -87,6 +87,7 @@ MeshT load_mesh(int p, const std::string& folder)
     // initialize quadrature rule and derivative operator
     MeshT mesh;
     mesh.quadrature = gauss_lobatto<real>(p);
+    mesh._n = mesh.quadrature.x.size();
     mesh.D = derivative_matrix<real>(mesh.quadrature.x);
 
     // read mesh parameters
