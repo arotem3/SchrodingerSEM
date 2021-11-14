@@ -65,7 +65,7 @@ quad_rule<real> gauss_lobatto(int n)
         // use the Golub-Welsch algorithm
         real* D = new real[n-1]{0};
         real* E = new real[n-2];
-        for (u_long i=0; i < n-2; ++i)
+        for (int i=0; i < n-2; ++i)
         {
             real ii = i+1;
             E[i] = std::sqrt( ii * (ii + 2) / ((2*ii + 3) * (2*ii + 1)) );

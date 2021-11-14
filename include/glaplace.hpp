@@ -16,8 +16,6 @@
 template <std::floating_point real>
 arma::Mat<real> glaplace(const arma::Mat<real>& u, const Quad<real>& element, const arma::Mat<real>& D, const quad_rule<real>& quadrature)
 {
-    u_long n = quadrature.x.size();
-
     arma::Mat<real> u_xi = D * u;
     arma::Mat<real> u_eta = u * D.t();
 

@@ -102,7 +102,6 @@ std::unordered_map<int, int> distribute_mesh(const SpMesh<real>& mesh, int P)
     q.push(std::make_tuple(0,n,P));
     while (not q.empty()) {
         auto [first, last, p] = q.front(); q.pop();
-        int m = last - first;
 
         PCA1(a, first, last);
 
