@@ -5,8 +5,9 @@
 #include <cmath>
 #include <tuple>
 #include <concepts>
-#include <armadillo>
 #include <boost/math/special_functions/legendre.hpp>
+
+#include "types.hpp"
 
 // extern to lapack routine dsteqr for eigevalue decomposition of symmetric
 // tridiagonal matrix:
@@ -26,8 +27,8 @@ extern "C" int ssteqr_(char*, int*, float*, float*, float*, int*, float*, int*);
 template <std::floating_point real>
 struct quad_rule
 {
-    arma::Col<real> x;
-    arma::Col<real> w;
+    mvec<real> x;
+    mvec<real> w;
 };
 
 // computes the Legendre-Gauss-Lobatto quadrature rule for polynomials of degree
@@ -45,8 +46,7 @@ quad_rule<real> gauss_lobatto(int n)
     if (n < 1)
         throw std::invalid_argument("gauss_lobatto error: require n >= 1, but n =" + std::to_string(n) + ".");
         
-    static const std::unordered_map<int, std::vector<real>> lgl =
-    {
+    static const std::unordered_map<int, std::vector<real>> lgl = {
         {1, {-1,1}},
         {2, {-1,0,1}},
         {3, {-1, -0.447213595499958, 0.447213595499958, 1}},

@@ -23,7 +23,7 @@ public:
     typedef real real_t;
 
     quad_rule<real> quadrature;
-    arma::Mat<real> D; // derivative operator
+    matrix<real> D; // derivative operator
     std::vector<Edge> edges;
     std::vector<CornerNode<real>> nodes;
     std::vector<Quad<real>> elements;

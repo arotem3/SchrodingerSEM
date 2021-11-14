@@ -38,6 +38,7 @@ void PCA1(std::vector<_idC<real>>& a, int first, int last)
 
     const int n = last - first;
 
+    // compute mean
     for (int i=first; i < last; ++i)
     {
         xm += a[i].x;
@@ -46,6 +47,7 @@ void PCA1(std::vector<_idC<real>>& a, int first, int last)
     xm /= n;
     ym /= n;
 
+    // compute covariance
     for (int i=first; i < last; ++i)
     {
         const real s = (a[i].x - xm);

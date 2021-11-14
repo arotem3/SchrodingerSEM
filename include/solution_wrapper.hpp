@@ -3,8 +3,7 @@
 
 #include <vector>
 
-#include <armadillo>
-
+#include "types.hpp"
 #include "Op.hpp"
 
 // implements template expressions for vector-vector operations {+,-} and
@@ -104,24 +103,24 @@ operator*(const Expr<T, ValueType>& x, scalar s)
 // wrapper for PDE solutions that enables vector-vector operations {+,+=,-,-=}
 // and vector-scalar operation {*} in compatibility with linear solvers
 template <std::floating_point real>
-class solution_wrapper : public Expr<solution_wrapper<real>, arma::Mat<real>>
+class solution_wrapper : public Expr<solution_wrapper<real>, matrix<real>>
 {
 public:
     typedef real value_type;
 
-    std::vector<arma::Mat<real>> values;
+    std::vector<matrix<real>> values;
 
     // move vector
-    solution_wrapper(std::vector<arma::Mat<real>>&& a) : values(std::move(a)) {}
-    solution_wrapper<real>& operator=(std::vector<arma::Mat<real>>&& a)
+    solution_wrapper(std::vector<matrix<real>>&& a) : values(std::move(a)) {}
+    solution_wrapper<real>& operator=(std::vector<matrix<real>>&& a)
     {
         values = std::move(a);
         return *this;
     }
 
     // copy vector
-    solution_wrapper(const std::vector<arma::Mat<real>>& a) : values(a) {}
-    solution_wrapper<real>& operator=(const std::vector<arma::Mat<real>>& a)
+    solution_wrapper(const std::vector<matrix<real>>& a) : values(a) {}
+    solution_wrapper<real>& operator=(const std::vector<matrix<real>>& a)
     {
         values = a;
         return *this;
@@ -145,7 +144,7 @@ public:
 
     // evaluate expression
     template <typename T>
-    solution_wrapper(const Expr<T, arma::Mat<real>>& op) : values(op.size())
+    solution_wrapper(const Expr<T, matrix<real>>& op) : values(op.size())
     {
         values.resize(op.size());
         
@@ -154,7 +153,7 @@ public:
             values[i] = op[i];
     }
     template <typename T>
-    solution_wrapper<real>& operator=(const Expr<T, arma::Mat<real>>& op)
+    solution_wrapper<real>& operator=(const Expr<T, matrix<real>>& op)
     {
         values.resize(op.size());
         #pragma omp parallel for schedule(dynamic) nowait
@@ -164,7 +163,7 @@ public:
     }
 
     template <typename T>
-    solution_wrapper<real>& operator+=(const Expr<T, arma::Mat<real>>& op)
+    solution_wrapper<real>& operator+=(const Expr<T, matrix<real>>& op)
     {
         #pragma omp parallel for schedule(dynamic) nowait
         for (int i=0; i < op.size(); ++i)
@@ -174,7 +173,7 @@ public:
     }
 
     template <typename T>
-    solution_wrapper<real>& operator-=(const Expr<T, arma::Mat<real>>& op)
+    solution_wrapper<real>& operator-=(const Expr<T, matrix<real>>& op)
     {
         #pragma omp parallel for schedule(dynamic) nowait
         for (int i=0; i < op.size(); ++i)
@@ -183,12 +182,12 @@ public:
         return *this;
     }
 
-    inline const arma::Mat<real>& operator[](size_t i) const
+    inline const matrix<real>& operator[](size_t i) const
     {
         return values[i];
     }
 
-    inline arma::Mat<real>& operator[](size_t i)
+    inline matrix<real>& operator[](size_t i)
     {
         return values[i];
     }

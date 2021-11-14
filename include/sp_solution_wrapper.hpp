@@ -4,8 +4,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <armadillo>
-
+#include "types.hpp"
 #include "SpMesh.hpp"
 #include "Op.hpp"
 
@@ -142,7 +141,7 @@ template <std::floating_point real>
 class sp_solution_wrapper
 {
 public:
-    typedef std::unordered_map<int, arma::Mat<real>> _umap;
+    typedef SparseData<matrix<real>> _umap;
 
     _umap values;
 
@@ -165,7 +164,7 @@ public:
     class sol_iterator
     {
     public:
-        typedef std::pair<int, arma::Mat<real>> pT;
+        typedef std::pair<int, matrix<real>> pT;
 
         _umap::const_iterator it;
         size_t _size;
@@ -196,7 +195,7 @@ public:
     }
 
     template <typename T>
-    sp_solution_wrapper(Expr<T, arma::Mat<real>> x)
+    sp_solution_wrapper(Expr<T, matrix<real>> x)
     {
         for (int i=0; i < x.size(); ++i)
         {
@@ -206,7 +205,7 @@ public:
         }
     }
     template <typename T>
-    sp_solution_wrapper& operator=(Expr<T, arma::Mat<real>> x)
+    sp_solution_wrapper& operator=(Expr<T, matrix<real>> x)
     {
         values.clear();
         for (int i=0; i < x.size(); ++i)
@@ -219,7 +218,7 @@ public:
         return *this;
     }
     template <typename T>
-    sp_solution_wrapper& operator+=(Expr<T, arma::Mat<real>> x)
+    sp_solution_wrapper& operator+=(Expr<T, matrix<real>> x)
     {
         for (int i=0; i < x.size(); ++i)
         {
@@ -232,7 +231,7 @@ public:
         return *this;
     }
     template <typename T>
-    sp_solution_wrapper& operator-=(Expr<T, arma::Mat<real>> x)
+    sp_solution_wrapper& operator-=(Expr<T, matrix<real>> x)
     {
         for (int i=0; i < x.size(); ++i)
         {
@@ -273,74 +272,74 @@ public:
 
 // expr + sol
 template <typename T, std::floating_point real>
-Expr<BinaryExpr<Expr<T, arma::Mat<real>>, typename sp_solution_wrapper<real>::sol_iterator, Plus<arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
-operator+(const Expr<T, arma::Mat<real>>& x, const sp_solution_wrapper<real>& y)
+Expr<BinaryExpr<Expr<T, matrix<real>>, typename sp_solution_wrapper<real>::sol_iterator, Plus<matrix<real>>, matrix<real>>, matrix<real>>
+operator+(const Expr<T, matrix<real>>& x, const sp_solution_wrapper<real>& y)
 {
-    typedef BinaryExpr<Expr<T, arma::Mat<real>>, typename sp_solution_wrapper<real>::sol_iterator, Plus<arma::Mat<real>>, arma::Mat<real>> bexp;
-    return Expr<bexp, arma::Mat<real>>(bexp(x, y.begin()));
+    typedef BinaryExpr<Expr<T, matrix<real>>, typename sp_solution_wrapper<real>::sol_iterator, Plus<matrix<real>>, matrix<real>> bexp;
+    return Expr<bexp, matrix<real>>(bexp(x, y.begin()));
 }
 
 // sol + expr
 template <typename T, std::floating_point real>
-Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, arma::Mat<real>>, Plus<arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
-operator+(const sp_solution_wrapper<real>& x, const Expr<T, arma::Mat<real>>& y)
+Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, matrix<real>>, Plus<matrix<real>>, matrix<real>>, matrix<real>>
+operator+(const sp_solution_wrapper<real>& x, const Expr<T, matrix<real>>& y)
 {
-    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, arma::Mat<real>>, Plus<arma::Mat<real>>, arma::Mat<real>> bexp;
-    return Expr<bexp, arma::Mat<real>>(bexp(x.begin(), y));
+    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, matrix<real>>, Plus<matrix<real>>, matrix<real>> bexp;
+    return Expr<bexp, matrix<real>>(bexp(x.begin(), y));
 }
 
 // sol + sol
 template <typename T, std::floating_point real>
-Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Plus<arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
+Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Plus<matrix<real>>, matrix<real>>, matrix<real>>
 operator+(const sp_solution_wrapper<real>& x, const sp_solution_wrapper<real>& y)
 {
-    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Plus<arma::Mat<real>>, arma::Mat<real>> bexp;
-    return Expr<bexp, arma::Mat<real>>(bexp(x.begin(), y.begin()));
+    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Plus<matrix<real>>, matrix<real>> bexp;
+    return Expr<bexp, matrix<real>>(bexp(x.begin(), y.begin()));
 }
 
 // Expr - sol
 template <typename T, std::floating_point real>
-Expr<BinaryExpr<Expr<T, arma::Mat<real>>, typename sp_solution_wrapper<real>::sol_iterator, Minus<arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
-operator-(const Expr<T, arma::Mat<real>>& x, const sp_solution_wrapper<real>& y)
+Expr<BinaryExpr<Expr<T, matrix<real>>, typename sp_solution_wrapper<real>::sol_iterator, Minus<matrix<real>>, matrix<real>>, matrix<real>>
+operator-(const Expr<T, matrix<real>>& x, const sp_solution_wrapper<real>& y)
 {
-    typedef BinaryExpr<Expr<T, arma::Mat<real>>, typename sp_solution_wrapper<real>::sol_iterator, Minus<arma::Mat<real>>, arma::Mat<real>> bexp;
-    return Expr<bexp, arma::Mat<real>>(bexp(x, y.begin()));
+    typedef BinaryExpr<Expr<T, matrix<real>>, typename sp_solution_wrapper<real>::sol_iterator, Minus<matrix<real>>, matrix<real>> bexp;
+    return Expr<bexp, matrix<real>>(bexp(x, y.begin()));
 }
 
 // sol - expr
 template <typename T, std::floating_point real>
-Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, arma::Mat<real>>, Minus<arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
-operator+(const sp_solution_wrapper<real>& x, const Expr<T, arma::Mat<real>>& y)
+Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, matrix<real>>, Minus<matrix<real>>, matrix<real>>, matrix<real>>
+operator+(const sp_solution_wrapper<real>& x, const Expr<T, matrix<real>>& y)
 {
-    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, arma::Mat<real>>, Minus<arma::Mat<real>>, arma::Mat<real>> bexp;
-    return Expr<bexp, arma::Mat<real>>(bexp(x.begin(), y));
+    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, Expr<T, matrix<real>>, Minus<matrix<real>>, matrix<real>> bexp;
+    return Expr<bexp, matrix<real>>(bexp(x.begin(), y));
 }
 
 // sol - sol
 template <typename T, std::floating_point real>
-Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Minus<arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
+Expr<BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Minus<matrix<real>>, matrix<real>>, matrix<real>>
 operator-(const sp_solution_wrapper<real>& x, const sp_solution_wrapper<real>& y)
 {
-    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Minus<arma::Mat<real>>, arma::Mat<real>> bexp;
-    return Expr<bexp, arma::Mat<real>>(bexp(x.begin(), y.begin()));
+    typedef BinaryExpr<typename sp_solution_wrapper<real>::sol_iterator, typename sp_solution_wrapper<real>::sol_iterator, Minus<matrix<real>>, matrix<real>> bexp;
+    return Expr<bexp, matrix<real>>(bexp(x.begin(), y.begin()));
 }
 
 // scalar * sol
 template <Scalar scalar, std::floating_point real>
-Expr<ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
+Expr<ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, matrix<real>>, matrix<real>>, matrix<real>>
 operator*(scalar s, const sp_solution_wrapper<real>& x)
 {
-    typedef ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, arma::Mat<real>>, arma::Mat<real>> sexp;
-    return Expr<sexp, arma::Mat<real>>(sexp(s, x.begin()));
+    typedef ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, matrix<real>>, matrix<real>> sexp;
+    return Expr<sexp, matrix<real>>(sexp(s, x.begin()));
 }
 
 // sol * scalar
 template <Scalar scalar, std::floating_point real>
-Expr<ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, arma::Mat<real>>, arma::Mat<real>>, arma::Mat<real>>
+Expr<ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, matrix<real>>, matrix<real>>, matrix<real>>
 operator*(const sp_solution_wrapper<real>& x, scalar s)
 {
-    typedef ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, arma::Mat<real>>, arma::Mat<real>> sexp;
-    return Expr<sexp, arma::Mat<real>>(sexp(s, x.begin()));
+    typedef ScalingExpr<scalar, typename sp_solution_wrapper<real>::sol_iterator, Scale<scalar, matrix<real>>, matrix<real>> sexp;
+    return Expr<sexp, matrix<real>>(sexp(s, x.begin()));
 }
 
 #endif

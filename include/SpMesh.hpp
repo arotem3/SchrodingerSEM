@@ -25,10 +25,10 @@ public:
     typedef real real_t;
 
     quad_rule<real> quadrature;
-    arma::Mat<real> D; // derivative operator
-    std::unordered_map<int,Edge> edges;
-    std::unordered_map<int,CornerNode<real>> nodes;
-    std::unordered_map<int,Quad<real>> elements;
+    matrix<real> D; // derivative operator
+    SparseData<Edge> edges;
+    SparseData<CornerNode<real>> nodes;
+    SparseData<Quad<real>> elements;
     const int& N = _n;
 
     // maps side to index

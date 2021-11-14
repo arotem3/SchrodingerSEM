@@ -13,10 +13,10 @@ struct Quad
     real ys[4];
     int corner_ids[4];
 
-    arma::Mat<real> J;
-    arma::Mat<real> A;
-    arma::Mat<real> B;
-    arma::Mat<real> C;
+    matrix<real> J;
+    matrix<real> A;
+    matrix<real> B;
+    matrix<real> C;
     u_long n;
 
     // algorithms 95 and 105 in:
@@ -26,14 +26,14 @@ struct Quad
     void compute_metrics(const arma::Col<real>& z)
     {
         n = z.size();
-        J.set_size(n, n);
-        A.set_size(n, n);
-        B.set_size(n, n);
-        C.set_size(n, n);
-        arma::Col<real> Xxi(n);
-        arma::Col<real> Yxi(n);
-        arma::Col<real> Xeta(n);
-        arma::Col<real> Yeta(n);
+        J = matrix<real>(n, n);
+        A = matrix<real>(n, n);
+        B = matrix<real>(n, n);
+        C = matrix<real>(n, n);
+        mvec<real> Xxi(n);
+        mvec<real> Yxi(n);
+        mvec<real> Xeta(n);
+        mvec<real> Yeta(n);
 
         for (u_long i=0; i < n; ++i)
         {
