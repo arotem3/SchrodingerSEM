@@ -1,4 +1,6 @@
-#include "sp_solution_wrapper.hpp"
+#include "mpi_impl/solution_wrapper.hpp"
+
+using namespace schro_mpi;
 
 bool test_sp_solution_wrapper()
 {
@@ -6,8 +8,8 @@ bool test_sp_solution_wrapper()
     m[1] = arma::ones(2,2);
     m[2] = arma::ones(2,2);
     m[4] = arma::ones(2,2);
-    sp_solution_wrapper<double> x(m);
-    sp_solution_wrapper<double> y = 0.5*x;
+    solution_wrapper<double> x(m);
+    solution_wrapper<double> y = 0.5*x;
 
     bool success = true;
 

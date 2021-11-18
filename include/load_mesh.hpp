@@ -11,8 +11,7 @@
 #include "CornerNode.hpp"
 #include "gauss_lobatto.hpp"
 #include "derivative_matrix.hpp"
-#include "Mesh.hpp"
-#include "SpMesh.hpp"
+#include "Quad.hpp"
 
 // Cantor's pairing function
 // this is used to index the sparse data structures
@@ -79,16 +78,14 @@ MeshT load_mesh(int p, const std::string& folder)
 {
     typedef typename MeshT::real_t real;
 
-    static const int cmap1[] = {0, p-1, p-1, 0};
-    static const int cmap2[] = {0, 0, p-1, p-1};
-    static const int emap1[] = {0,1,3,0};
-    static const int emap2[] = {1,2,2,3};
-
     // initialize quadrature rule and derivative operator
-    MeshT mesh;
-    mesh.quadrature = gauss_lobatto<real>(p);
-    mesh._n = mesh.quadrature.x.size();
+    MeshT mesh(p);
     mesh.D = derivative_matrix<real>(mesh.quadrature.x);
+
+    const int cmap1[] = {0, mesh.N-1, mesh.N-1, 0};
+    const int cmap2[] = {0, 0, mesh.N-1, mesh.N-1};
+    const int emap1[] = {0,1,3,0};
+    const int emap2[] = {1,2,2,3};
 
     // read mesh parameters
     std::ifstream info_file(folder + "/info.txt");
@@ -104,7 +101,7 @@ MeshT load_mesh(int p, const std::string& folder)
     if (not coo_file.is_open())
         throw std::runtime_error("could not open coordinate file.");
     
-    if constexpr(std::is_same<MeshT, Mesh<real>>::value)
+    if constexpr(MeshT::mesh_t == 'd')
         mesh.nodes.resize(n_nodes);
 
     for (int k=0; k < n_nodes; ++k)
@@ -120,7 +117,7 @@ MeshT load_mesh(int p, const std::string& folder)
     if (not element_file.is_open())
         throw std::runtime_error("could not open element file.");
 
-    if constexpr(std::is_same<MeshT, Mesh<real>>::value)
+    if constexpr(MeshT::mesh_t == 'd')
         mesh.elements.resize(n_el);
 
     for (int el=0; el < n_el; ++el)
@@ -141,7 +138,7 @@ MeshT load_mesh(int p, const std::string& folder)
             element.xs[i] = mesh.nodes[c].x;
             element.ys[i] = mesh.nodes[c].y;
         }
-        element.compute_metrics(mesh.quadrature.x);
+        // element.compute_metrics(mesh.quadrature.x);
         mesh.elements[el] = std::move(element);
     }
     element_file.close();
@@ -178,7 +175,7 @@ MeshT load_mesh(int p, const std::string& folder)
         }
     }
 
-    if constexpr(std::is_same<MeshT, Mesh<real>>::value)
+    if constexpr(MeshT::mesh_t == 'd')
         mesh.edges.resize(edge_map.size());
 
     // identify boundary edges and link nodes to edges
@@ -200,7 +197,7 @@ MeshT load_mesh(int p, const std::string& folder)
             }
             else
             {
-                it->second.startIter = p-2;
+                it->second.startIter = mesh.N-2;
                 it->second.deltaIter = -1;
             }
         }

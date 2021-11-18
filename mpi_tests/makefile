@@ -1,5 +1,5 @@
-CXX = g++
-FLAGS = -std=c++20 -O3 -fopenmp #-Wall
+CXX = mpic++
+FLAGS = -std=c++20 -O3 #-Wall
 LIBS = -llapack -lboost_serialization -lboost_mpi -larmadillo
 SRC = ${wildcard *.cpp}
 OBJ = ${patsubst %.cpp, build/%.o, $(SRC)}

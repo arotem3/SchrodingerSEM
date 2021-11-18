@@ -1,4 +1,6 @@
-#include "solution_wrapper.hpp"
+#include "openmp_impl/solution_wrapper.hpp"
+
+using namespace schro_omp;
 
 bool test_solution_wrapper()
 {

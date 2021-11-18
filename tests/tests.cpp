@@ -10,6 +10,7 @@ bool test_solution_wrapper();
 bool test_pcg();
 bool test_minres();
 bool test_sp_solution_wrapper();
+bool test_poisson();
 
 int main()
 {
@@ -25,6 +26,7 @@ int main()
     success = success && test_pcg();
     success = success && test_minres();
     success = success && test_sp_solution_wrapper();
+    success = success && test_poisson();
 
     if (success)
         std::cout << "all tests passed! :)\n";

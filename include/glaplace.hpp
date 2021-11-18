@@ -8,7 +8,7 @@
 #include "gauss_lobatto.hpp"
 #include "Quad.hpp"
 
-// computes the Galerkin projection of the laplaction of u: (Lu, v) ==> (Du, Dv)
+// computes the Galerkin projection of the laplaction of u: (-Lu, v) ==> (Du, Dv)
 // algorithm 105 in:
 // D. A. Kopriva. Implementing Spectral Methods for Partial Differential
 // Equations: Algorithms for Scientists and Engineers. Scientific computation.
@@ -22,7 +22,7 @@ matrix<real> glaplace(const matrix<real>& u, const Quad<real>& element, const ma
     matrix<real> F = D.t() * (arma::diagmat(quadrature.w) * (element.A % u_xi - element.B % u_eta));
     matrix<real> G = ((element.C % u_eta - element.B % u_xi) * arma::diagmat(quadrature.w)) * D;
 
-    matrix<real> lap_u = arma::diagmat(quadrature.w) * F + G * arma::diagmat(quadrature.w);
+    matrix<real> lap_u = F * arma::diagmat(quadrature.w) + arma::diagmat(quadrature.w) * G;
     
     return lap_u;
 }

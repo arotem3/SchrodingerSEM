@@ -4,7 +4,8 @@
 #include <concepts>
 #include <vector>
 #include <cmath>
-#include <armadillo>
+
+#include "types.hpp"
 
 template <std::floating_point real>
 struct Quad
@@ -48,8 +49,8 @@ struct Quad
             {
                 J.at(i, j) = Xxi[j]*Yeta[i] - Xeta[i]*Yxi[j];
                 A.at(i, j) = ( std::pow(Yeta[i], 2) + std::pow(Xeta[i], 2) ) / J.at(i, j);
-                B.at(i, j) = ( Yeta[i]*Yxi[j] + Xeta[i]*Yxi[j] ) / J.at(i, j);
-                C.at(i, j) = ( std::pow(Yeta[i], 2) + std::pow(Xxi[j], 2) ) / J.at(i, j);
+                B.at(i, j) = ( Yeta[i]*Yxi[j] + Xeta[i]*Xxi[j] ) / J.at(i, j);
+                C.at(i, j) = ( std::pow(Yxi[i], 2) + std::pow(Xxi[j], 2) ) / J.at(i, j);
             }
     }
 
