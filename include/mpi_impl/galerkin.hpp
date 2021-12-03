@@ -24,7 +24,7 @@ namespace schro_mpi
     SparseData<matrix<real>> laplacian(SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
     {
         unmask<real>(u, mesh, comm, E2P);
-        
+
         for (auto& [el, values] : u)
             values = glaplace<real>(values, mesh.elements.at(el), mesh.D, mesh.quadrature);
 

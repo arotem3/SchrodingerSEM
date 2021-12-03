@@ -8,6 +8,7 @@
 #include <boost/mpi.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/unordered_map.hpp>
 
 #include "types.hpp"
 #include "CornerNode.hpp"

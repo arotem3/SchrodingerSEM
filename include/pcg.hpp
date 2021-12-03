@@ -1,6 +1,8 @@
 #ifndef PCG_HPP
 #define PCG_HPP
 
+#include <iostream>
+
 #include <cmath>
 #include <concepts>
 

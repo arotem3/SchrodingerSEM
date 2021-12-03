@@ -28,7 +28,7 @@ bool test_poisson()
     std::vector<matrix<double>> u(nel, arma::zeros(mesh.N, mesh.N));
     auto rslts = poisson<double>(u, F, mesh, mesh.dof(), 1e-5);
 
-    // std::cout << "poisson returned after " << rslts.n_iter << " iteration with residual " << rslts.residual << std::endl;
+    std::cout << "poisson returned after " << rslts.n_iter << " iteration with residual " << rslts.residual << std::endl;
 
     return rslts.success;
 }

@@ -1,13 +1,13 @@
 #ifndef SCATTER_MESH_HPP
 #define SCATTER_MESH_HPP
 
-#include <boost/serialization/unordered_map.hpp>
-#include <boost/serialization/vector.hpp>
+#include <concepts>
+#include <unordered_map>
 
 #include "types.hpp"
 #include "load_mesh.hpp"
-#include "mpi_impl/Mesh.hpp"
 #include "mpi_impl/comm_base.hpp"
+#include "mpi_impl/Mesh.hpp"
 #include "mpi_impl/distribute_mesh.hpp"
 
 namespace schro_mpi
@@ -22,6 +22,7 @@ namespace schro_mpi
         if (rank == rootProcessor) {
             Mesh<real> super_mesh = load_mesh<Mesh<real>>(p, folder);      
             Mesh<real> mesh(std::move(super_mesh.quadrature));
+            mesh.D = std::move(super_mesh.D); // super_mesh doesn't need it, but mesh does
             
             std::unordered_map<int, int> E2P;
             if (rank == rootProcessor)
@@ -75,8 +76,9 @@ namespace schro_mpi
             return std::make_pair(std::move(E2P), std::move(mesh));
         } else {
             Mesh<real> mesh(p);
+            mesh.D = derivative_matrix<real>(mesh.quadrature.x);
+
             std::unordered_map<int, int> E2P;
-            
             mpi::broadcast(comm, E2P, rootProcessor);
 
             mpi::scatter(comm, mesh.nodes, rootProcessor);

@@ -43,7 +43,15 @@ namespace schro_mpi
                 int e = edge.elements[k];
                 int s = std::abs(edge.element_sides[k]);
 
-                set_edge_values(a, mesh, edge, edge_vals[k], e, s);
+                if (s == 2 or s == 4) {
+                    int i = mesh.smap(s);
+                    for (int j=1; j < mesh.N-1; ++j)
+                        a[e].at(i, j) = edge_vals[k][j];
+                } else {
+                    int j = mesh.smap(s);
+                    for (int i=1; i < mesh.N-1; ++i)
+                        a[e].at(i, j) = edge_vals[k][i];
+                }
             } // distribute edge contribution to the local information of both elements.
         } else {
             int k = a.contains(edge.elements[0]) ? 0 : 1;
@@ -54,7 +62,7 @@ namespace schro_mpi
             int s = std::abs(edge.element_sides[k]);
         
             EdgeMessage<real> msg;
-            msg.id = partner;
+            msg.id = edge_id;
             msg.values = get_edge_values<real>(a, mesh, e, s);
 
             promises[partner].push_back(std::move(msg));

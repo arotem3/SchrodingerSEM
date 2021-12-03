@@ -1,7 +1,6 @@
 #include <boost/mpi.hpp>
 #include "mpi_impl/scatter_mesh.hpp"
 #include "mpi_impl/poisson.hpp"
-#include "load_mesh.hpp"
 
 namespace mpi = boost::mpi;
 using namespace schro_mpi;
@@ -17,6 +16,9 @@ bool test_poisson(mpi::communicator& comm)
     
     auto [E2P, mesh] = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
     mesh.compute_metrics();
+
+    int dof = mesh.dof(); // processor-local degrees of freedom
+    dof = mpi::all_reduce(comm, dof, std::plus<int>{}); // total degrees of freedom
 
     const auto& z = mesh.quadrature.x;
 
@@ -34,7 +36,7 @@ bool test_poisson(mpi::communicator& comm)
             }
     }
     
-    auto rslts = poisson<double>(u, F, mesh, comm, E2P, 2'000, 1e-5);
+    auto rslts = poisson<double>(u, F, mesh, comm, E2P, dof, 1e-5);
 
     if (comm.rank() == 0)
         std::cout << "poisson returned after " << rslts.n_iter << " iteration with residual " << rslts.residual << std::endl;

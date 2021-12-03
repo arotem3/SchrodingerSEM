@@ -15,6 +15,7 @@ void set_edge_values(container& a, const Mesh& mesh, const Edge& edge, const std
         for (int k=1; k < mesh.N-1; ++k)
         {
             a[e].at(i,j) = edge_values[k];
+            // a.at(e)(i, j) = edge_values.at(k);
             j += edge.deltaIter;
         }
     } else {
@@ -23,6 +24,7 @@ void set_edge_values(container& a, const Mesh& mesh, const Edge& edge, const std
         for (int k=1; k < mesh.N-1; ++k)
         {
             a[e].at(i,j) = edge_values[k];
+            // a.at(e)(i, j) = edge_values.at(k);
             i += edge.deltaIter;
         }
     }

@@ -33,7 +33,8 @@ namespace schro_mpi
                 // This processor does NOT own the second element that shares this
                 // edge, so we make a promise to send that owning processor the data
                 // for this edge
-                promises[E2P.at(e1)].push_back(EdgeMessage<real>(edge_id, std::move(edge_values)));
+                int partner = E2P.at(e1);
+                promises[partner].push_back(EdgeMessage<real>(edge_id, std::move(edge_values)));
             }
         } else {
             // this processor does NOT own the element that manages this edge, so it

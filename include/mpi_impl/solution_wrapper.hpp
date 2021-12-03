@@ -2,6 +2,7 @@
 #define MPI_IMPL_SOLUTION_WRAPPER_HPP
 
 #include <unordered_map>
+#include <set>
 #include <utility>
 
 #include "types.hpp"
@@ -225,13 +226,20 @@ namespace schro_mpi
         template <typename T>
         solution_wrapper& operator=(Expr<T, matrix<real>> x)
         {
-            values.clear();
+            std::set<typename _umap::key_type> keys; // set of keys in 'this'. Any keys not in expr are deleted after copying expr into 'this'.
+            for (auto it = values.begin(); it != values.end(); ++it)
+                keys.insert(it->first);
+
             for (int i=0; i < x.size(); ++i)
             {
                 auto xi = *x;
-                values[xi.first] = xi.second;
+                keys.erase(xi.first); // key is modified so don't erase in 'this'
+                values[xi.first] = std::move(xi.second);
                 ++x;
             }
+
+            for (auto key : keys)
+                values.erase(key);
 
             return *this;
         }

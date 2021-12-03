@@ -16,9 +16,10 @@ namespace schro_omp
         // compute dot for interior nodes
         real p_interiors = 0;
 
+        auto interior = arma::span(1,n-2);
         #pragma omp parallel for if(a.size() > 63) reduction(+:p_interiors) schedule(dynamic) 
         for (int i=0; i < a.size(); ++i)
-            p_interiors += arma::dot(a[i].submat(arma::span(1,n-1), arma::span(1,n-1)), b[i].submat(arma::span(1,n-1), arma::span(1,n-1)));
+            p_interiors += arma::dot(a[i].submat(interior, interior), b[i].submat(interior, interior));
 
         // compute dot along edges
         real p_edges = 0;

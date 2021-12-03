@@ -20,14 +20,14 @@ namespace schro_mpi
 
         solution_wrapper<real> x(std::move(u));
 
-        auto L = [&](const solution_wrapper<real>& v) -> solution_wrapper<real>
+        auto L = [&comm, &mesh, &E2P](const solution_wrapper<real>& v) -> solution_wrapper<real>
         {
             return solution_wrapper<real>(laplacian(v.values, mesh, comm, E2P));
         };
 
-        auto dotprod = [&](const solution_wrapper<real>& x, const solution_wrapper<real>& y) -> real
+        auto dotprod = [&comm, &mesh](const solution_wrapper<real>& x, const solution_wrapper<real>& y) -> real
         {
-            return dot(comm, mesh, x.values, y.values);  
+            return dot(comm, mesh, x.values, y.values);
         };
 
         solver_results<real> rslts = pcg<real>(x, L, b, dotprod, IdentityPreconditioner{}, max_iter, tol);

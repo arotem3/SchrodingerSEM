@@ -46,11 +46,11 @@ namespace schro_mpi
         
         Mesh(const quad_rule<real>& q) : quadrature(q)
         {
-            _n = q.x.size();
+            _n = quadrature.x.size();
         }
         Mesh(quad_rule<real>&& q) : quadrature(std::move(q))
         {
-            _n = q.x.size();
+            _n = quadrature.x.size();
         }
 
 
@@ -93,9 +93,17 @@ namespace schro_mpi
             return smap[side-1];
         }
 
-        inline int dof() const
+        int dof() const
         {
-            return nodes.size() + edges.size()*(N-2) + elements.size()*(N-2)*(N-2);
+            int d = elements.size()*(N-2)*(N-2);
+            for (const auto& [id, edge] : edges)
+                if (elements.contains(edge.elements[0]))
+                    d += N-2;
+            for (const auto& [id, node] : nodes)
+                if (elements.contains(node.connected_elements[0].element_id))
+                    ++d;
+            
+            return d;
         }
     };
 
