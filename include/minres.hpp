@@ -25,6 +25,8 @@ solver_results<real> minres(vec& x, LinOp A, const vec& b, Dot dot, Precond prec
     vec y = precond(r1);
     vec r2 = r1;
 
+    real b_norm = std::sqrt( dot(r1, r1) );
+
     real machine_epsilon = std::numeric_limits<real>::epsilon();
     real beta1 = std::sqrt( dot(y, r1) );
     real beta = beta1,
@@ -83,12 +85,15 @@ solver_results<real> minres(vec& x, LinOp A, const vec& b, Dot dot, Precond prec
         w = (real(1)/gamma) * (v - eps_old*w1 - delta*w2);
         x += phi*w;
 
-        real A_norm = std::sqrt(tnorm);
-        real y_norm = std::sqrt( dot(x,x) );
+        // real A_norm = std::sqrt(tnorm);
+        // real y_norm = std::sqrt( dot(x,x) );
         
-        bool residual_convergence = phibar < tol*(A_norm * y_norm) + tol;
-        bool residual_orthogonality = root < tol*A_norm + tol;
-        if (residual_convergence or residual_orthogonality) {
+        // bool residual_convergence = phibar < tol*(A_norm * y_norm) + tol;
+        bool residual_convergence = phibar < tol*b_norm + tol;
+        // bool residual_orthogonality = root < tol*A_norm + tol;
+
+        if (residual_convergence) {
+        // if (residual_convergence or residual_orthogonality) {
             success = true;
             break;
         }

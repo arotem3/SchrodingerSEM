@@ -5,12 +5,11 @@ bool test_derivative_matrix();
 bool test_Quad();
 bool test_glaplace();
 bool test_load_mesh();
-// bool test_distribute_mesh();
 bool test_solution_wrapper();
 bool test_pcg();
 bool test_minres();
-// bool test_sp_solution_wrapper();
 bool test_poisson();
+bool test_helmholtz();
 
 int main()
 {
@@ -25,6 +24,7 @@ int main()
     success = test_pcg()                && success;
     success = test_minres()             && success;
     success = test_poisson()            && success;
+    success = test_helmholtz()          && success;
 
     if (success)
         std::cout << "all tests passed! :)\n";

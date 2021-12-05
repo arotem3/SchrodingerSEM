@@ -13,42 +13,21 @@
 
 namespace schro_mpi
 {
-    // computes the inner produce (grad u, grad v) associated with the inner
-    // produce (-lap u, v) {they are equivalent with dirichlet boundary
-    // conditions}
-    // algorithm 133 in:
-    // D. A. Kopriva. Implementing Spectral Methods for Partial Differential
-    // Equations: Algorithms for Scientists and Engineers. Scientific computation.
-    // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.s
-    template <std::floating_point real>
-    SparseData<matrix<real>> laplacian(SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
-    {
-        unmask<real>(u, mesh, comm, E2P);
-
-        for (auto& [el, values] : u)
-            values = glaplace<real>(values, mesh.elements.at(el), mesh.D, mesh.quadrature);
-
-        global_sum<real>(u, mesh, comm, E2P);
-        mask<real>(u, mesh);
-
-        return u;
-    }
-
-    // computes the inner product (c*u, v) where c may vary spatially.
-    // maybe use higher order quadrature rule?
+    // applies op to a solution defined defined on a mesh. Intended for
+    // designing systems of linear equations as the values of the result are
+    // summed on edges and corners. For example op may be the laplacian
+    // operator.
     // algorithm 133 in:
     // D. A. Kopriva. Implementing Spectral Methods for Partial Differential
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
-    template <std::floating_point real>
-    SparseData<matrix<real>> scale(const SparseData<matrix<real>>& c, SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
+    template <std::floating_point real, typename Op>
+    SparseData<matrix<real>> galerkin_op(Op op, SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
     {
         unmask<real>(u, mesh, comm, E2P);
 
-        const auto& w = mesh.quadrature.w;
-        for (auto& [el, values] : u)
-            values = ( arma::diagmat(w) * (values % c.at(el)) * arma::diagmat(w) ) % mesh.elements.at(el).J;
-        
+        op(u, mesh, comm, E2P);
+
         global_sum<real>(u, mesh, comm, E2P);
         mask<real>(u, mesh);
 
@@ -62,7 +41,7 @@ namespace schro_mpi
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
     template <std::floating_point real>
-    SparseData<matrix<real>> identity(SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
+    SparseData<matrix<real>> gproj(SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
     {
         unmask<real>(u, mesh, comm, E2P);
 
