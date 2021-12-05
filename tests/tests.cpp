@@ -10,6 +10,7 @@ bool test_pcg();
 bool test_minres();
 bool test_poisson();
 bool test_helmholtz();
+bool test_v_wrapper();
 
 int main()
 {
@@ -25,6 +26,7 @@ int main()
     success = test_minres()             && success;
     success = test_poisson()            && success;
     success = test_helmholtz()          && success;
+    success = test_v_wrapper()          && success;
 
     if (success)
         std::cout << "all tests passed! :)\n";

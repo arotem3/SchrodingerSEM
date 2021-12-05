@@ -150,8 +150,6 @@ namespace schro_omp
         template <typename T>
         solution_wrapper(const Expr<T, matrix<real>>& op) : values(op.size())
         {
-            values.resize(op.size());
-            
             #pragma omp parallel for if(op.size() > 63) schedule(dynamic) 
             for (int i=0; i < op.size(); ++i)
                 values[i] = op[i];

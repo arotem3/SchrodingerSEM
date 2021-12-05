@@ -272,25 +272,15 @@ namespace schro_mpi
 
         solution_wrapper& operator+=(const solution_wrapper<real>& x)
         {
-            for (int i=0; i < x.size(); ++i)
-            {
-                auto xi = *x;
-                // values[xi.first] += xi.second;
-                values.at(xi.first) += xi.second;
-                ++x;
-            }
+            for (auto& [el, v] : values)
+                v += x.values.at(el);
 
             return *this;
         }
         solution_wrapper& operator-=(const solution_wrapper<real>& x)
         {
-            for (int i=0; i < x.size(); ++i)
-            {
-                auto xi = *x;
-                // values[xi.first] -= xi.second;
-                values.at(xi.first) -= xi.second;
-                ++x;
-            }
+            for (auto& [el, v] : values)
+                v -= x.values.at(el);
 
             return *this;
         }

@@ -8,6 +8,7 @@ bool test_dot(mpi::communicator&);
 bool test_solution_wrapper(mpi::communicator&);
 bool test_scatter_mesh(mpi::communicator&);
 bool test_helmholtz(mpi::communicator&);
+bool test_v_wrapper(mpi::communicator&);
 
 int main(int argc, char* argv[])
 {
@@ -21,6 +22,7 @@ int main(int argc, char* argv[])
     success = test_scatter_mesh(comm)       && success;
     success = test_poisson(comm)            && success;
     success = test_helmholtz(comm)          && success;
+    success = test_v_wrapper(comm)          && success;
 
     if (success)
         if (comm.rank() == 0)

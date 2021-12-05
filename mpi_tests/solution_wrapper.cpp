@@ -13,8 +13,6 @@ bool test_solution_wrapper(mpi::communicator& comm)
         solution_wrapper<double> x(m);
         solution_wrapper<double> y = 0.5*x;
 
-        success = true;
-
         x += 2.0 * (3.0*x - y);
 
         if (x.values[1][0] != 6.0) {
@@ -26,7 +24,7 @@ bool test_solution_wrapper(mpi::communicator& comm)
         bool keys_preserved = std::equal(x.values.begin(), x.values.end(), m.begin(), [](auto a, auto b) { return a.first == b.first; });
 
         if (not (size_preserved and keys_preserved)) {
-            std::cout << "sp_solution_wrapper failed to preserve structure of original map\n";
+            std::cout << "solution_wrapper failed to preserve structure of original map\n";
             success = false;
         }
     }
