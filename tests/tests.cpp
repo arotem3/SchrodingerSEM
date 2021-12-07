@@ -11,6 +11,7 @@ bool test_minres();
 bool test_poisson();
 bool test_helmholtz();
 bool test_v_wrapper();
+bool test_schrodinger();
 
 int main()
 {
@@ -27,6 +28,7 @@ int main()
     success = test_poisson()            && success;
     success = test_helmholtz()          && success;
     success = test_v_wrapper()          && success;
+    success = test_schrodinger()        && success;
 
     if (success)
         std::cout << "all tests passed! :)\n";
