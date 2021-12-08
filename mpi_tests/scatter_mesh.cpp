@@ -5,7 +5,7 @@ using namespace schro_mpi;
 bool test_scatter_mesh(mpi::communicator& comm)
 {
     int order = 3;
-    auto [E2P, mesh] = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
+    Mesh<double> mesh = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
 
     return true;
 }

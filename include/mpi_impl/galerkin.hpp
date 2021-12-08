@@ -22,15 +22,15 @@ namespace schro_mpi
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
     template <std::floating_point real, typename Op>
-    SparseData<matrix<real>> galerkin_op(Op op, SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
+    SparseData<matrix<real>> galerkin_op(Op op, SparseData<matrix<real>> u, const Mesh<real>& mesh)
     {
-        unmask<real>(u, mesh, comm, E2P);
-
-        op(u, mesh, comm, E2P);
-
-        global_sum<real>(u, mesh, comm, E2P);
+        unmask<real>(u, mesh);
+        
+        op(u, mesh);
+        
+        global_sum<real>(u, mesh);
         mask<real>(u, mesh);
-
+        
         return u;
     }
 
@@ -41,15 +41,15 @@ namespace schro_mpi
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
     template <std::floating_point real>
-    SparseData<matrix<real>> gproj(SparseData<matrix<real>> u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P)
+    SparseData<matrix<real>> gproj(SparseData<matrix<real>> u, const Mesh<real>& mesh)
     {
-        unmask<real>(u, mesh, comm, E2P);
-
+        unmask<real>(u, mesh);
+        
         const auto& w = mesh.quadrature.w;
         for (auto& [el, values] : u)
             values = ( arma::diagmat(w) * values * arma::diagmat(w) ) % mesh.elements.at(el).J;
-        
-        global_sum<real>(u, mesh, comm, E2P);
+
+        global_sum<real>(u, mesh);
         mask<real>(u, mesh);
 
         return u;

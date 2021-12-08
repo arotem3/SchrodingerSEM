@@ -15,7 +15,7 @@ namespace schro_mpi
     // loads a mesh from folder (on the rootProcessor) and distribute the mesh
     // to the rest of the processor in the communicator (load balanced).
     template <std::floating_point real>
-    std::pair<std::unordered_map<int,int>, Mesh<real>> scatter_mesh(int p, const std::string& folder, mpi::communicator& comm, const int rootProcessor)
+    Mesh<real> scatter_mesh(int p, const std::string& folder, mpi::communicator& comm, const int rootProcessor)
     {
         const int num_proc = comm.size();
         const int rank = comm.rank();
@@ -23,12 +23,11 @@ namespace schro_mpi
             Mesh<real> super_mesh = load_mesh<Mesh<real>>(p, folder);      
             Mesh<real> mesh(std::move(super_mesh.quadrature));
             mesh.D = std::move(super_mesh.D); // super_mesh doesn't need it, but mesh does
-            
-            std::unordered_map<int, int> E2P;
-            if (rank == rootProcessor)
-                E2P = distribute_mesh<real>(super_mesh, num_proc);
+            mesh.comm = comm;
 
-            mpi::broadcast(comm, E2P, rootProcessor);
+            mesh.e2p = distribute_mesh<real>(super_mesh, num_proc);
+
+            mpi::broadcast(comm, mesh.e2p, rootProcessor);
 
             std::vector< std::unordered_map<int,CornerNode<real>> > needed_corners(num_proc);
             std::vector< std::unordered_map<int,Quad<real>> >       needed_elements(num_proc);
@@ -39,7 +38,7 @@ namespace schro_mpi
                 // determine which elements belong to which processors and place
                 // them into a map of {int, Quad} for the owner of that element.
                 // That map will be sent to the owner.
-                int elem_owner = E2P.at(i);
+                int elem_owner = mesh.e2p.at(i);
                 needed_elements.at(elem_owner)[i] = super_mesh.elements.at(i);
                 for (int j=0; j < 4; ++j)
                 {
@@ -57,13 +56,13 @@ namespace schro_mpi
             {
                 // same for edges now.
                 int e = super_mesh.edges.at(i).elements[0];
-                int elem_owner = E2P.at(e);
+                int elem_owner = mesh.e2p.at(e);
                 if (needed_edges[elem_owner].count(i) == 0)
                     needed_edges[elem_owner][i] = super_mesh.edges.at(i);
 
                 if (super_mesh.edges.at(i).edge_type != BOUNDARY) {
                     e = super_mesh.edges.at(i).elements[1];
-                    elem_owner = E2P.at(e);
+                    elem_owner = mesh.e2p.at(e);
                     if (needed_edges[elem_owner].count(i) == 0)
                         needed_edges[elem_owner][i] = super_mesh.edges.at(i);
                 }
@@ -73,19 +72,19 @@ namespace schro_mpi
             mpi::scatter(comm, needed_edges, mesh.edges, rootProcessor);
             mpi::scatter(comm, needed_elements, mesh.elements, rootProcessor);
 
-            return std::make_pair(std::move(E2P), std::move(mesh));
+            return mesh;
         } else {
             Mesh<real> mesh(p);
             mesh.D = derivative_matrix<real>(mesh.quadrature.x);
+            mesh.comm = comm;
 
-            std::unordered_map<int, int> E2P;
-            mpi::broadcast(comm, E2P, rootProcessor);
+            mpi::broadcast(comm, mesh.e2p, rootProcessor);
 
             mpi::scatter(comm, mesh.nodes, rootProcessor);
             mpi::scatter(comm, mesh.edges, rootProcessor);
             mpi::scatter(comm, mesh.elements, rootProcessor);
 
-            return std::make_pair(std::move(E2P), std::move(mesh));
+            return mesh;
         }
     }
 

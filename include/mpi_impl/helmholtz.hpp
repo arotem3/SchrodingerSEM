@@ -19,9 +19,9 @@ namespace schro_mpi
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
     template <std::floating_point real>
-    solver_results<real> helmholtz(SparseData<matrix<real>>& u, const SparseData<matrix<real>>& c, const SparseData<matrix<real>>& f, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P, int max_iter, real tol)
+    solver_results<real> helmholtz(SparseData<matrix<real>>& u, const SparseData<matrix<real>>& c, const SparseData<matrix<real>>& f, const Mesh<real>& mesh, int max_iter, real tol)
     {
-        solution_wrapper<real> b(gproj(f, mesh, comm, E2P));
+        solution_wrapper<real> b(gproj(f, mesh));
 
         solution_wrapper<real> x(std::move(u));
 
@@ -38,7 +38,7 @@ namespace schro_mpi
             (
                 galerkin_op<real>
                 (
-                    [&c](SparseData<matrix<real>>& u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P) -> void
+                    [&c](SparseData<matrix<real>>& u, const Mesh<real>& mesh) -> void
                     {
                         const auto& w = mesh.quadrature.w;
                         for (auto& [el, values] : u)
@@ -48,16 +48,14 @@ namespace schro_mpi
                         }
                     },
                     v.values,
-                    mesh,
-                    comm,
-                    E2P
+                    mesh
                 )
             );
         };
 
-        auto dotprod = [&comm, &mesh](const solution_wrapper<real>& x, const solution_wrapper<real>& y) -> real
+        auto dotprod = [&mesh](const solution_wrapper<real>& x, const solution_wrapper<real>& y) -> real
         {
-            return dot(comm, mesh, x.values, y.values);
+            return dot(mesh, x.values, y.values);
         };
         
 

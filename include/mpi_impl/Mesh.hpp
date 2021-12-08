@@ -19,7 +19,7 @@ namespace schro_mpi
     class Mesh
     {
     friend Mesh<real> load_mesh<Mesh<real>>(int, const std::string&);
-    friend std::pair<std::unordered_map<int,int>, Mesh<real>> scatter_mesh<real>(int, const std::string&, mpi::communicator&, const int);
+    friend Mesh<real> scatter_mesh<real>(int, const std::string&, mpi::communicator&, const int);
 
     private:
         int _n;
@@ -33,6 +33,8 @@ namespace schro_mpi
         SparseData<Edge> edges;
         SparseData<CornerNode<real>> nodes;
         SparseData<Quad<real>> elements;
+        std::unordered_map<int,int> e2p;
+        mpi::communicator comm;
         const int& N = _n;
 
         Mesh()
@@ -54,7 +56,7 @@ namespace schro_mpi
         }
 
 
-        Mesh(const Mesh<real>& mesh) : _n(mesh.N), quadrature(mesh.quadrature), D(mesh.D), edges(mesh.edges), nodes(mesh.nodes), elements(mesh.elements) {}
+        Mesh(const Mesh<real>& mesh) : _n(mesh.N), quadrature(mesh.quadrature), D(mesh.D), edges(mesh.edges), nodes(mesh.nodes), elements(mesh.elements), e2p(mesh.e2p), comm(mesh.comm) {}
         Mesh<real>& operator=(const Mesh<real>& mesh)
         {
             _n = mesh.N;
@@ -63,11 +65,13 @@ namespace schro_mpi
             edges = mesh.edges;
             nodes = mesh.nodes;
             elements = mesh.elements;
+            e2p = mesh.e2p;
+            comm = mesh.comm;
 
             return *this;
         }
 
-        Mesh(Mesh<real>&& mesh) : _n(mesh.N), quadrature(std::move(mesh.quadrature)), D(std::move(mesh.D)), edges(std::move(mesh.edges)), nodes(std::move(mesh.nodes)), elements(std::move(mesh.elements)) {}
+        Mesh(Mesh<real>&& mesh) : _n(mesh.N), quadrature(std::move(mesh.quadrature)), D(std::move(mesh.D)), edges(std::move(mesh.edges)), nodes(std::move(mesh.nodes)), elements(std::move(mesh.elements)), e2p(std::move(mesh.e2p)), comm(std::move(mesh.comm)) {}
         Mesh<real>& operator=(Mesh<real>&& mesh)
         {
             _n = mesh.N;
@@ -76,6 +80,8 @@ namespace schro_mpi
             edges = std::move(mesh.edges);
             nodes = std::move(mesh.nodes);
             elements = std::move(mesh.elements);
+            e2p = std::move(mesh.e2p);
+            comm = std::move(mesh.comm);
 
             return *this;
         }

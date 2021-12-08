@@ -12,7 +12,7 @@
 namespace schro_mpi
 {
     template <std::floating_point real>
-    void unmask_side(SparseData<matrix<real>>& a, int edge_id, const Edge& edge, const Mesh<real>& mesh, EdgePromises<real>& promises, std::set<int>& expected_recieves, const std::unordered_map<int,int>& E2P)
+    void unmask_side(SparseData<matrix<real>>& a, int edge_id, const Edge& edge, const Mesh<real>& mesh, EdgePromises<real>& promises, std::set<int>& expected_recieves)
     {
         int e0 = edge.elements[0]; // the element managing this edge
         int s0 = edge.element_sides[0];
@@ -33,14 +33,14 @@ namespace schro_mpi
                 // This processor does NOT own the second element that shares this
                 // edge, so we make a promise to send that owning processor the data
                 // for this edge
-                int partner = E2P.at(e1);
+                int partner = mesh.e2p.at(e1);
                 promises[partner].push_back(EdgeMessage<real>(edge_id, std::move(edge_values)));
             }
         } else {
             // this processor does NOT own the element that manages this edge, so it
             // makes a note that it is owed data from the processor owning this
             // element.
-            int partner = E2P.at(e0);
+            int partner = mesh.e2p.at(e0);
             expected_recieves.insert(partner);
         }
     }
@@ -86,7 +86,7 @@ namespace schro_mpi
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
     template <std::floating_point real>
-    void unmask(SparseData<matrix<real>>& a, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int, int>& E2P)
+    void unmask(SparseData<matrix<real>>& a, const Mesh<real>& mesh)
     {
         // we iterate over the edges we own or share. We unmask all edges we own.
         // For edges we share, if we own the element that controls that edge, then
@@ -98,15 +98,15 @@ namespace schro_mpi
         std::set<int> expected_recieves;
         for (const auto& [edge_id, edge] : mesh.edges)
             if (edge.edge_type != BOUNDARY)
-                unmask_side<real>(a, edge_id, edge, mesh, edge_promises, expected_recieves, E2P);
+                unmask_side<real>(a, edge_id, edge, mesh, edge_promises, expected_recieves);
 
         std::vector<mpi::request> requests;
         for (const auto& [partner, messages] : edge_promises)
-            requests.push_back( comm.isend(partner, 0, messages) );
+            requests.push_back( mesh.comm.isend(partner, 0, messages) );
 
         EdgePromises<real> edges_recieved;
         for (const int& partner : expected_recieves)
-            requests.push_back( comm.irecv(partner, 0, edges_recieved[partner]) );
+            requests.push_back( mesh.comm.irecv(partner, 0, edges_recieved[partner]) );
 
         mpi::wait_all(requests.begin(), requests.end());
 
@@ -130,15 +130,15 @@ namespace schro_mpi
         expected_recieves.clear(); // reuse this variable
         for (const auto& [node_id, node] : mesh.nodes)
             if (node.corner_type != BOUNDARY)
-                unmask_node<real>(a, node, corner_promises, expected_recieves, E2P);
+                unmask_node<real>(a, node, corner_promises, expected_recieves, mesh.e2p);
 
         requests.clear(); // reuse variable
         for (const auto& [partner, messages] : corner_promises)
-            requests.push_back( comm.isend(partner, 0, messages) );
+            requests.push_back( mesh.comm.isend(partner, 0, messages) );
 
         CornerPromises<real> corners_recieved;
         for (const int& partner : expected_recieves)
-            requests.push_back( comm.irecv(partner, 0, corners_recieved[partner]) );
+            requests.push_back( mesh.comm.irecv(partner, 0, corners_recieved[partner]) );
 
         mpi::wait_all(requests.begin(), requests.end());
 
@@ -146,8 +146,8 @@ namespace schro_mpi
         {
             for (const auto& msg : messages)
             {
-                a.at(msg.info.element_id)(msg.info.i, msg.info.j) = msg.value; // safe index
-                // a.at(msg.info.element_id).at(msg.info.i, msg.info.j) = msg.value;
+                // a.at(msg.info.element_id)(msg.info.i, msg.info.j) = msg.value; // safe index
+                a.at(msg.info.element_id).at(msg.info.i, msg.info.j) = msg.value;
             }
         }
     }

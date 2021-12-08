@@ -12,6 +12,8 @@
 
 #include "types.hpp"
 #include "CornerNode.hpp"
+#include "Edge.hpp"
+#include "Quad.hpp"
 
 namespace schro_mpi
 {

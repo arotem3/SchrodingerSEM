@@ -14,9 +14,9 @@ namespace schro_mpi
     // solves -(u_xx + u_yy) == f(x,y) with dirichlet Boundary conditions,
     // (assume to already be enforced on u)
     template <std::floating_point real>
-    solver_results<real> poisson(SparseData<matrix<real>>& u, const SparseData<matrix<real>>& f, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P, int max_iter, real tol)
+    solver_results<real> poisson(SparseData<matrix<real>>& u, const SparseData<matrix<real>>& f, const Mesh<real>& mesh, int max_iter, real tol)
     {
-        solution_wrapper<real> b(gproj(f, mesh, comm, E2P)); // inner product (f, v)
+        solution_wrapper<real> b(gproj(f, mesh)); // inner product (f, v)
 
         solution_wrapper<real> x(std::move(u));
 
@@ -27,28 +27,26 @@ namespace schro_mpi
         // D. A. Kopriva. Implementing Spectral Methods for Partial Differential
         // Equations: Algorithms for Scientists and Engineers. Scientific computation.
         // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
-        auto L = [&comm, &mesh, &E2P](const solution_wrapper<real>& v) -> solution_wrapper<real>
+        auto L = [&mesh](const solution_wrapper<real>& v) -> solution_wrapper<real>
         {
             return solution_wrapper<real>
             (
                 galerkin_op<real>
                 (
-                    [](SparseData<matrix<real>>& u, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int,int>& E2P) -> void
+                    [](SparseData<matrix<real>>& u, const Mesh<real>& mesh) -> void
                     {
                         for (auto& [el, values] : u)
                             values = glaplace<real>(values, mesh.elements.at(el), mesh.D, mesh.quadrature);
                     },
                     v.values,
-                    mesh,
-                    comm,
-                    E2P
+                    mesh
                 )
             );
         };
 
-        auto dotprod = [&comm, &mesh](const solution_wrapper<real>& x, const solution_wrapper<real>& y) -> real
+        auto dotprod = [&mesh](const solution_wrapper<real>& x, const solution_wrapper<real>& y) -> real
         {
-            return dot(comm, mesh, x.values, y.values);
+            return dot(mesh, x.values, y.values);
         };
 
         solver_results<real> rslts = pcg<real>(x, L, b, dotprod, IdentityPreconditioner{}, max_iter, tol);

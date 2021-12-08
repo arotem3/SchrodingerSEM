@@ -9,7 +9,7 @@ bool test_helmholtz(mpi::communicator& comm)
     auto f = [](double x, double y) -> double {return x*x - y*y;};
 
     int order = 6;
-    auto [E2P, mesh] = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
+    Mesh<double> mesh = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
     mesh.compute_metrics();
 
     int dof = mesh.dof();
@@ -33,7 +33,7 @@ bool test_helmholtz(mpi::communicator& comm)
             }
     }
 
-    auto rslts = helmholtz<double>(u, c, F, mesh, comm, E2P, dof*10, 1e-12);
+    auto rslts = helmholtz<double>(u, c, F, mesh, dof*10, 1e-12);
 
     if (comm.rank() == 0)
         std::cout << "helmholtz returned after " << rslts.n_iter << " iteration with residual " << rslts.residual << std::endl;

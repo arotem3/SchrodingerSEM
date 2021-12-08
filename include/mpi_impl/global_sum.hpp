@@ -12,7 +12,7 @@
 namespace schro_mpi
 {
     template <std::floating_point real>
-    void sum_side(SparseData<matrix<real>>& a, int edge_id, const Edge& edge, const Mesh<real>& mesh, EdgePromises<real>& promises, std::set<int>& expected_recieves, const std::unordered_map<int,int>& E2P)
+    void sum_side(SparseData<matrix<real>>& a, int edge_id, const Edge& edge, const Mesh<real>& mesh, EdgePromises<real>& promises, std::set<int>& expected_recieves)
     {
         if (a.contains(edge.elements[0]) and a.contains(edge.elements[1])) {
             // this proc owns both elements on either side of this edge, it can
@@ -56,7 +56,7 @@ namespace schro_mpi
         } else {
             int k = a.contains(edge.elements[0]) ? 0 : 1;
 
-            int partner = E2P.at(edge.elements[1-k]);
+            int partner = mesh.e2p.at(edge.elements[1-k]);
             
             int e = edge.elements[k];
             int s = std::abs(edge.element_sides[k]);
@@ -76,7 +76,7 @@ namespace schro_mpi
     // Equations: Algorithms for Scientists and Engineers. Scientific computation.
     // Springer Netherlands, Dordrecht, 1. aufl. edition, 2009. ISBN 9048122600.
     template <std::floating_point real>
-    void global_sum(SparseData<matrix<real>>& a, const Mesh<real>& mesh, mpi::communicator& comm, const std::unordered_map<int, int>& E2P)
+    void global_sum(SparseData<matrix<real>>& a, const Mesh<real>& mesh)
     {
         // First we compute sums along edges. When this processor owns both elements
         // making up an edge, it simply sum those edges. If this proc owns only one
@@ -89,15 +89,15 @@ namespace schro_mpi
         std::set<int> expected_recieves;
         for (const auto& [edge_id, edge] : mesh.edges)
             if (edge.edge_type != BOUNDARY)
-                sum_side(a, edge_id, edge, mesh, edge_promises, expected_recieves, E2P);
+                sum_side(a, edge_id, edge, mesh, edge_promises, expected_recieves);
 
         std::vector<mpi::request> requests;
         for (const auto& [partner, messages] : edge_promises)
-            requests.push_back( comm.isend(partner, 0, messages) );
+            requests.push_back( mesh.comm.isend(partner, 0, messages) );
 
         EdgePromises<real> edges_recieved;
         for (const int& partner : expected_recieves)
-            requests.push_back( comm.irecv(partner, 0, edges_recieved[partner]) );
+            requests.push_back( mesh.comm.irecv(partner, 0, edges_recieved[partner]) );
 
         mpi::wait_all(requests.begin(), requests.end());
 
@@ -153,8 +153,8 @@ namespace schro_mpi
                 // connected element is the owner, and manages the corner sum.
                 auto el = node.connected_elements.cbegin();
                 
-                int owner = E2P.at(el->element_id);
-                if (owner == comm.rank()) {
+                int owner = mesh.e2p.at(el->element_id);
+                if (owner == mesh.comm.rank()) {
                     // this processor is the manager of this corner node.
                     real& csum = corner_sum[node_id];
                     csum = a[el->element_id](el->i, el->j);
@@ -171,7 +171,7 @@ namespace schro_mpi
                             // this proc does NOT own this element, but it expects
                             // data from it, so it makes a note to expect data from
                             // its owner
-                            expected_recieves.insert(E2P.at(el->element_id));
+                            expected_recieves.insert(mesh.e2p.at(el->element_id));
                         }
                     }
                 } else {
@@ -195,12 +195,12 @@ namespace schro_mpi
         requests.clear(); // reuse variable
         // send corner data to owners
         for (const auto& [partner, messages] : corner_promises)
-            requests.push_back( comm.isend(partner, 0, messages) );
+            requests.push_back( mesh.comm.isend(partner, 0, messages) );
 
         CornerSumPromises<real> corners_recieved;
         // recieve corner data from nodes sharing corner
         for (const int& partner : expected_recieves)
-            requests.push_back( comm.irecv(partner, 0, corners_recieved[partner]) );
+            requests.push_back( mesh.comm.irecv(partner, 0, corners_recieved[partner]) );
 
         mpi::wait_all(requests.begin(), requests.end());
 
@@ -220,13 +220,13 @@ namespace schro_mpi
         requests.clear(); // reuse variable
         // broadcast corner sums to all who share corner
         for (const auto& [partner, messages] : sums_bcast)
-            requests.push_back( comm.isend(partner, 0, messages) );
+            requests.push_back( mesh.comm.isend(partner, 0, messages) );
 
         // recieve corner sums from owners. We use the information from the sent
         // corners to determine which procs will send this proc data
         corners_recieved.clear(); // reuse variables
         for (const auto& [partner, messages] : corner_promises)
-            requests.push_back( comm.irecv(partner, 0, corners_recieved[partner]) );
+            requests.push_back( mesh.comm.irecv(partner, 0, corners_recieved[partner]) );
 
         mpi::wait_all(requests.begin(), requests.end());
 

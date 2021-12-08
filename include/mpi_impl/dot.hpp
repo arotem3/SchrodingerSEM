@@ -13,7 +13,7 @@
 namespace schro_mpi
 {
     template <std::floating_point real>
-    real dot(mpi::communicator& comm, const Mesh<real>& mesh, const SparseData<matrix<real>>& a, const SparseData<matrix<real>>& b)
+    real dot(const Mesh<real>& mesh, const SparseData<matrix<real>>& a, const SparseData<matrix<real>>& b)
     {
         int n = mesh.N;
 
@@ -65,7 +65,7 @@ namespace schro_mpi
         
         real p = p_interiors + p_edges + p_corners;
 
-        p = mpi::all_reduce(comm, p, std::plus<real>{});
+        p = mpi::all_reduce(mesh.comm, p, std::plus<real>{});
 
         return p;
     }

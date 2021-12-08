@@ -14,7 +14,7 @@ bool test_poisson(mpi::communicator& comm)
 {
     int order = 6;
     
-    auto [E2P, mesh] = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
+    Mesh<double> mesh = scatter_mesh<double>(order, "../meshes/small_mesh", comm, 0);
     mesh.compute_metrics();
 
     int dof = mesh.dof(); // processor-local degrees of freedom
@@ -36,7 +36,7 @@ bool test_poisson(mpi::communicator& comm)
             }
     }
     
-    auto rslts = poisson<double>(u, F, mesh, comm, E2P, dof, 1e-10);
+    auto rslts = poisson<double>(u, F, mesh, dof, 1e-10);
 
     if (comm.rank() == 0)
         std::cout << "poisson returned after " << rslts.n_iter << " iteration with residual " << rslts.residual << std::endl;
