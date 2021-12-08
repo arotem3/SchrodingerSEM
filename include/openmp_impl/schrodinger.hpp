@@ -3,52 +3,29 @@
 
 #include <concepts>
 #include <deque>
-#include <iomanip>
-#include <iostream>
 
 #include "types.hpp"
 #include "minres.hpp"
+#include "verbose.hpp"
+#include "ode_base.hpp"
 #include "openmp_impl/galerkin.hpp"
 #include "openmp_impl/v_wrapper.hpp"
 #include "openmp_impl/dot.hpp"
 
 namespace schro_omp
 {
-    template <std::floating_point real>
-    struct solver_opts
-    {
-        int max_iter;
-        real tol;
-        real dt;
-    };
-
-    void progress_bar(float t, float T)
-    {
-        int n = 30;
-        int p = (n*t)/T;
-        std::cout << "[";
-        for (int i=0; i < n; ++i)
-        {
-            if (i < p)
-                std::cout << "-";
-            else if (i == p)
-                std::cout << ">";
-            else
-                std::cout << " ";
-        }
-        std::cout << "]\r" << std::flush;
-    }
-
     // solves schrodinger equation until time T. uses second order backwards
     // differetiation formula:
     // see pg 365 in:
     // Hairer, E, S P. Nørsett, and Gerhard Wanner. "Solving Ordinary
     // Differential Equations." (1993). Print.
-    template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback>
-    bool schrodinger_bdf2(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback)
+    template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback = NullCallback>
+    bool schrodinger_bdf2(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
     {
         const int n = mesh.elements.size();
         real alpha = opts.dt;
+
+        VerboseTracker vtracker(std::cout, 2-std::log10(opts.dt));
 
         v_wrapper<real> p;
         p.values.resize(2);
@@ -111,9 +88,6 @@ namespace schro_omp
         real t = 0;
         while (t < T)
         {
-            std::cout << std::fixed << std::setprecision(int(std::log10(T/opts.dt))+2) << t << " :: ";
-            progress_bar(t, T);
-
             if (ps.size() == 2)
                 ps.pop_front();
             ps.push_back(proj(p));
@@ -127,6 +101,14 @@ namespace schro_omp
                 rslts = minres<real>(p, Res, b, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             }
 
+            unmask(p[0].values, mesh);
+            unmask(p[1].values, mesh);
+
+            t += opts.dt;
+
+            if (opts.verbose)
+                vtracker(t, T);
+
             success = rslts.success;
             if (not success)
                 break;
@@ -134,11 +116,10 @@ namespace schro_omp
             bool please_stop = callback(p[0].values, p[1].values);
             if (please_stop)
                 break;
-
-            t += opts.dt;
         }
 
-        std::cout << std::endl;
+        if (opts.verbose)
+            std::cout << std::endl;
 
         psi_real = std::move(p[0].values);
         psi_nimag = std::move(p[1].values);
@@ -154,16 +135,20 @@ namespace schro_omp
     // Solving Ordinary Differential Equations II. Springer Series in
     // Computational Mathematics, vol 14. Springer, Berlin, Heidelberg.
     // https://doi-org.proxy2.cl.msu.edu/10.1007/978-3-662-09947-6_1
-    template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback>
-    bool schrodinger_dirk4s5(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback)
+    template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback = NullCallback>
+    bool schrodinger_dirk4s5(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
     {
         const int n = mesh.elements.size();
         const real alpha = 0.25 * opts.dt;
+
+        VerboseTracker vtracker(std::cout, 2-std::log10(opts.dt));
 
         v_wrapper<real> p;
         p.values.resize(2);
         p[0] = solution_wrapper<real>(std::move(psi_real));
         p[1] = solution_wrapper<real>(std::move(psi_nimag));
+
+        v_wrapper<real> zeros = real(0) * p;
 
         const auto& w = mesh.quadrature.w;
 
@@ -226,59 +211,72 @@ namespace schro_omp
             return dot<real>(mesh, q1[0].values, q2[0].values) + dot<real>(mesh, q1[1].values, q2[1].values);
         };
 
+        real pnorm = std::sqrt(dotprod(p, p));
+
         real t = 0;
         bool success;
 
         while (t < T)
         {
-            std::cout << std::fixed << std::setprecision(int(std::log10(T/opts.dt))+2) << t << " :: ";
-            progress_bar(t, T);
-            
             v_wrapper<real> v = opts.dt * f(p);
-            v_wrapper<real> z1 = 0.25 * v;
+            v_wrapper<real> z1 = zeros;
             solver_results<real> rslts = minres<real>(z1, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
+            success = rslts.success;
+            if (not success)
+                break;
 
-            v_wrapper<real> z2 = 0.75 * v;
-            v = p + 0.5*z1;
+            v = p + real(0.5)*z1;
             v = opts.dt * f(v);
+            v_wrapper<real> z2 = zeros;
             rslts = minres<real>(z2, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
                 break;
 
-            v = p + (17.0/50.0)*z1 + (-1.0/25.0)*z2;
+            v = p + real(17.0/50.0)*z1 + real(-1.0/25.0)*z2;
             v = opts.dt * f(v);
-            v_wrapper<real> z3 = 0.4*z1 + 0.6*z2;
+            v_wrapper<real> z3 = zeros;
             rslts = minres<real>(z3, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
                 break;
 
-            v = p + (371.0/1360.0)*z1 + (-137.0/2720.0)*z2 + (15.0/544.0)*z3;
+            v = p + real(371.0/1360.0)*z1 + real(-137.0/2720.0)*z2 + real(15.0/544.0)*z3;
             v = opts.dt * f(v);
-            v_wrapper<real> z4 = 0.5*z1 + 0.5*z2;
+            v_wrapper<real> z4 = zeros;
             rslts = minres<real>(z4, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
                 break;
 
-            v = p + (25.0/24.0)*z1 + (-49.0/48.0)*z2 + (125.0/16.0)*z3 + (-85.0/12.0)*z4;
+            v = p + real(25.0/24.0)*z1 + real(-49.0/48.0)*z2 + real(125.0/16.0)*z3 + real(-85.0/12.0)*z4;
             v = opts.dt * f(v);
-            v_wrapper<real> z5 = 2*z4;
+            v_wrapper<real> z5 = zeros;
             rslts = minres<real>(z5, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
                 break;
 
-            p += (25.0/24.0)*z1 + (-49.0/48.0)*z2 + (125.0/16.0)*z3 + (-85.0/12.0)*z4 + 0.25*z5;
+            p += real(25.0/24.0)*z1 + real(-49.0/48.0)*z2 + real(125.0/16.0)*z3 + real(-85.0/12.0)*z4 + real(0.25)*z5;
+
+            v_wrapper<real> err = real(-3.0/16.0)*z1 + real(-27.0/32.0)*z2 + real(25.0/32.0)*z3 + real(0.25)*z5;
+            real estimated_error = std::sqrt(dotprod(err, err)) / pnorm;
+
+            unmask(p[0].values, mesh);
+            unmask(p[1].values, mesh);
+
             t += opts.dt;
+
+            if (opts.verbose)
+                vtracker(t, T, estimated_error);
 
             bool please_stop = callback(p[0].values, p[1].values);
             if (please_stop)
                 break;
         }
 
-        std::cout << "\n";
+        if (opts.verbose)
+            std::cout << "\n";
 
         psi_real = std::move(p[0].values);
         psi_nimag = std::move(p[1].values);
@@ -293,8 +291,8 @@ namespace schro_omp
     // Solving Ordinary Differential Equations II. Springer Series in
     // Computational Mathematics, vol 14. Springer, Berlin, Heidelberg.
     // https://doi-org.proxy2.cl.msu.edu/10.1007/978-3-662-09947-6_1
-    template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback>
-    bool schrodinger_dirk4s3(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback)
+    template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback = NullCallback>
+    bool schrodinger_dirk4s3(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
     {
         constexpr real gamma = std::cos(M_PI/18.0) / std::sqrt(3.0) + 0.5;
         constexpr real delta = 1.0 / 6.0 / std::pow(2*gamma - 1, 2);
@@ -302,10 +300,14 @@ namespace schro_omp
         const int n = mesh.elements.size();
         const real alpha = gamma * opts.dt;
 
+        VerboseTracker vtracker(std::cout, 2-std::log10(opts.dt));
+
         v_wrapper<real> p;
         p.values.resize(2);
         p[0] = solution_wrapper<real>(std::move(psi_real));
         p[1] = solution_wrapper<real>(std::move(psi_nimag));
+
+        v_wrapper<real> zeros = 0 * p;
 
         const auto& w = mesh.quadrature.w;
 
@@ -373,19 +375,16 @@ namespace schro_omp
 
         while (t < T)
         {
-            std::cout << std::fixed << std::setprecision(int(std::log10(T/opts.dt))+2) << t << " :: ";
-            progress_bar(t, T);
-            
             v_wrapper<real> v = opts.dt * f(p);
-            v_wrapper<real> z1 = gamma * v;
+            v_wrapper<real> z1 = zeros;
             solver_results<real> rslts = minres<real>(z1, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
                 break;
 
-            v_wrapper<real> z2 = 0.5 * v;
             v = p + real(0.5-gamma)*z1;
             v = opts.dt * f(v);
+            v_wrapper<real> z2 = zeros;
             rslts = minres<real>(z2, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
@@ -393,21 +392,29 @@ namespace schro_omp
                 
             v = p + real(2*gamma)*z1 + real(1-4*gamma)*z2;
             v = opts.dt * f(v);
-            v_wrapper<real> z3 = real(2 - 2*gamma)*z2;
+            v_wrapper<real> z3 = zeros;
             rslts = minres<real>(z3, Res, v, dotprod, IdentityPreconditioner{}, opts.max_iter, opts.tol);
             success = rslts.success;
             if (not success)
                 break;
                 
             p += delta*z1 + real(1-2*delta)*z2 + delta*z3;
+
+            unmask(p[0].values, mesh);
+            unmask(p[1].values, mesh);
+
             t += opts.dt;
+
+            if (opts.verbose)
+                vtracker(t, T);
 
             bool please_stop = callback(p[0].values, p[1].values);
             if (please_stop)
                 return true;
         }
 
-        std::cout << std::endl;
+        if (opts.verbose)
+            std::cout << std::endl;
 
         psi_real = std::move(p[0].values);
         psi_nimag = std::move(p[1].values);
