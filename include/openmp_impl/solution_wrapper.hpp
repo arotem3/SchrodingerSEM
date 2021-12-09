@@ -150,7 +150,7 @@ namespace schro_omp
         template <typename T>
         solution_wrapper(const Expr<T, matrix<real>>& op) : values(op.size())
         {
-            #pragma omp parallel for if(op.size() > 63) schedule(dynamic) 
+            #pragma omp parallel for if(op.size() > 63) schedule(static) 
             for (int i=0; i < op.size(); ++i)
                 values[i] = op[i];
         }
@@ -158,7 +158,7 @@ namespace schro_omp
         solution_wrapper<real>& operator=(const Expr<T, matrix<real>>& op)
         {
             values.resize(op.size());
-            #pragma omp parallel for if(op.size() > 63) schedule(dynamic) 
+            #pragma omp parallel for if(op.size() > 63) schedule(static) 
             for (int i=0; i < op.size(); ++i)
                 values[i] = op[i];
             return *this;
@@ -167,7 +167,7 @@ namespace schro_omp
         template <typename T>
         solution_wrapper<real>& operator+=(const Expr<T, matrix<real>>& op)
         {
-            #pragma omp parallel for if(op.size() > 63) schedule(dynamic) 
+            #pragma omp parallel for if(op.size() > 63) schedule(static) 
             for (int i=0; i < op.size(); ++i)
                 values[i] += op[i];
 
@@ -177,7 +177,7 @@ namespace schro_omp
         template <typename T>
         solution_wrapper<real>& operator-=(const Expr<T, matrix<real>>& op)
         {
-            #pragma omp parallel for if(op.size() > 63) schedule(dynamic) 
+            #pragma omp parallel for if(op.size() > 63) schedule(static) 
             for (int i=0; i < op.size(); ++i)
                 values[i] -= op[i];
 

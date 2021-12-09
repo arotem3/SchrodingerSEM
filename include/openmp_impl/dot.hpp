@@ -17,14 +17,14 @@ namespace schro_omp
         real p_interiors = 0;
 
         auto interior = arma::span(1,n-2);
-        #pragma omp parallel for if(a.size() > 63) reduction(+:p_interiors) schedule(dynamic) 
+        #pragma omp parallel for if(a.size() > 63) reduction(+:p_interiors) schedule(static) 
         for (int i=0; i < a.size(); ++i)
             p_interiors += arma::dot(a[i].submat(interior, interior), b[i].submat(interior, interior));
 
         // compute dot along edges
         real p_edges = 0;
 
-        #pragma omp parallel for if(mesh.edges.size() > 63) reduction(+:p_edges) schedule(dynamic) 
+        #pragma omp parallel for if(mesh.edges.size() > 63) reduction(+:p_edges) schedule(static) 
         for (int i=0; i < mesh.edges.size(); ++i)
         {
             auto& edge = mesh.edges[i];
@@ -50,7 +50,7 @@ namespace schro_omp
         // compute dot on corners
         real p_corners = 0;
         
-        #pragma omp parallel for if(mesh.nodes.size() > 63) reduction(+:p_corners) schedule(dynamic) 
+        #pragma omp parallel for if(mesh.nodes.size() > 63) reduction(+:p_corners) schedule(static) 
         for (auto it = mesh.nodes.cbegin(); it != mesh.nodes.cend(); ++it)
         {
             auto& info = it->connected_elements[0];

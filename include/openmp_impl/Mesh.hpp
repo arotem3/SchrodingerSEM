@@ -69,7 +69,7 @@ namespace schro_omp
 
         void compute_metrics()
         {
-            #pragma omp parallel for if(elements.size() > 63) schedule(dynamic)
+            #pragma omp parallel for if(elements.size() > 63) schedule(static)
             for (auto it = elements.begin(); it != elements.end(); ++it)
                 it->compute_metrics(quadrature.x);
         }

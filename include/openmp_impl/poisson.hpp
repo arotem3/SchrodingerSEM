@@ -36,7 +36,7 @@ namespace schro_omp
                 (
                     [](std::vector<matrix<real>>& u, const Mesh<real>& mesh) -> void
                     {
-                        #pragma omp parallel for if(u.size() > 63) schedule(dynamic) 
+                        #pragma omp parallel for if(u.size() > 63) schedule(static) 
                         for (int i=0; i < u.size(); ++i)
                             u[i] = glaplace(u[i], mesh.elements[i], mesh.D, mesh.quadrature);
                     },

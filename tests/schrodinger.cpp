@@ -23,7 +23,7 @@ bool test_schrodinger_bdf2()
     const auto& z = mesh.quadrature.x;
 
     int nel = mesh.elements.size();
-    std::vector<matrix<double>> V(nel, arma::zeros(mesh.N, mesh.N)), psi_real(nel, arma::zeros(mesh.N, mesh.N)), psi_nimag(nel, arma::zeros(mesh.N, mesh.N));
+    std::vector<matrix<double>> V(nel, arma::zeros(mesh.N, mesh.N)), psi_real(nel, arma::zeros(mesh.N, mesh.N)), psi_imag(nel, arma::zeros(mesh.N, mesh.N));
     for (int e=0; e < nel; ++e)
         for (int i=0; i < mesh.N; ++i)
             for (int j=0; j < mesh.N; ++j)
@@ -31,7 +31,7 @@ bool test_schrodinger_bdf2()
                 auto [x, y] = mesh.elements[e].from_local_coo(z[i], z[j]);
                 V[e](i, j) = potential(x, y);
                 psi_real[e](i, j) = u0(x, y);
-                psi_nimag[e](i, j) = 0.0;
+                psi_imag[e](i, j) = 0.0;
             }
 
     double T = 0.01;
@@ -43,7 +43,7 @@ bool test_schrodinger_bdf2()
     opts.verbose = true;
 
     std::cout << "solving Schrodinger equation with BDF2...\n";
-    bool success = schrodinger_bdf2<double>(psi_real, psi_nimag, V, mesh, T, opts);
+    bool success = schrodinger_bdf2<double>(psi_real, psi_imag, V, mesh, T, opts);
 
     if (not success)
         std::cout << "schrodinger_df2 failed test\n";
@@ -59,7 +59,7 @@ bool test_schrodinger_dirk4s3()
     const auto& z = mesh.quadrature.x;
 
     int nel = mesh.elements.size();
-    std::vector<matrix<double>> V(nel, arma::zeros(mesh.N, mesh.N)), psi_real(nel, arma::zeros(mesh.N, mesh.N)), psi_nimag(nel, arma::zeros(mesh.N, mesh.N));
+    std::vector<matrix<double>> V(nel, arma::zeros(mesh.N, mesh.N)), psi_real(nel, arma::zeros(mesh.N, mesh.N)), psi_imag(nel, arma::zeros(mesh.N, mesh.N));
     for (int e=0; e < nel; ++e)
         for (int i=0; i < mesh.N; ++i)
             for (int j=0; j < mesh.N; ++j)
@@ -67,7 +67,7 @@ bool test_schrodinger_dirk4s3()
                 auto [x, y] = mesh.elements[e].from_local_coo(z[i], z[j]);
                 V[e](i, j) = potential(x, y);
                 psi_real[e](i, j) = u0(x, y);
-                psi_nimag[e](i, j) = 0.0;
+                psi_imag[e](i, j) = 0.0;
             }
 
     double T = 0.01;
@@ -79,7 +79,7 @@ bool test_schrodinger_dirk4s3()
     opts.verbose = true;
 
     std::cout << "solving schrodinger equation with dirk4s3...\n";
-    bool success = schrodinger_dirk4s3<double>(psi_real, psi_nimag, V, mesh, T, opts);
+    bool success = schrodinger_dirk4s3<double>(psi_real, psi_imag, V, mesh, T, opts);
 
     if (not success)
         std::cout << "schrodinger_dirk4s3 failed test\n";
@@ -95,7 +95,7 @@ bool test_schrodinger_dirk4s5()
     const auto& z = mesh.quadrature.x;
 
     int nel = mesh.elements.size();
-    std::vector<matrix<double>> V(nel, arma::zeros(mesh.N, mesh.N)), psi_real(nel, arma::zeros(mesh.N, mesh.N)), psi_nimag(nel, arma::zeros(mesh.N, mesh.N));
+    std::vector<matrix<double>> V(nel, arma::zeros(mesh.N, mesh.N)), psi_real(nel, arma::zeros(mesh.N, mesh.N)), psi_imag(nel, arma::zeros(mesh.N, mesh.N));
     for (int e=0; e < nel; ++e)
         for (int i=0; i < mesh.N; ++i)
             for (int j=0; j < mesh.N; ++j)
@@ -103,7 +103,7 @@ bool test_schrodinger_dirk4s5()
                 auto [x, y] = mesh.elements[e].from_local_coo(z[i], z[j]);
                 V[e](i, j) = potential(x, y);
                 psi_real[e](i, j) = u0(x, y);
-                psi_nimag[e](i, j) = 0.0;
+                psi_imag[e](i, j) = 0.0;
             }
 
     double T = 0.01;
@@ -115,7 +115,7 @@ bool test_schrodinger_dirk4s5()
     opts.verbose = true;
     
     std::cout << "solving schrodinger equation with dirk4s5...\n";
-    bool success = schrodinger_dirk4s5<double>(psi_real, psi_nimag, V, mesh, T, opts);
+    bool success = schrodinger_dirk4s5<double>(psi_real, psi_imag, V, mesh, T, opts);
 
     if (not success)
         std::cout << "schrodinger_dirk4s5 failed test\n";

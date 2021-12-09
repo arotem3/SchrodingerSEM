@@ -20,7 +20,7 @@ namespace schro_omp
     // Hairer, E, S P. Nørsett, and Gerhard Wanner. "Solving Ordinary
     // Differential Equations." (1993). Print.
     template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback = NullCallback>
-    bool schrodinger_bdf2(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
+    bool schrodinger_bdf2(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_imag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
     {
         const int n = mesh.elements.size();
         real alpha = opts.dt;
@@ -30,7 +30,7 @@ namespace schro_omp
         v_wrapper<real> p;
         p.values.resize(2);
         p[0] = solution_wrapper<real>(std::move(psi_real));
-        p[1] = solution_wrapper<real>(std::move(psi_nimag));
+        p[1] = solution_wrapper<real>(std::move(psi_imag));
 
         const auto& w = mesh.quadrature.w;
 
@@ -48,7 +48,7 @@ namespace schro_omp
 
             unmask(y[0].values, mesh); unmask(y[1].values, mesh);
 
-            #pragma omp parallel for if(n > 63) schedule(dynamic)
+            #pragma omp parallel for if(n > 63) schedule(static)
             for (int i=0; i < n; ++i)
             {
                 matrix<real> u = std::move(y[0].values[i]);
@@ -122,7 +122,7 @@ namespace schro_omp
             std::cout << std::endl;
 
         psi_real = std::move(p[0].values);
-        psi_nimag = std::move(p[1].values);
+        psi_imag = std::move(p[1].values);
 
         return success;
     }
@@ -136,7 +136,7 @@ namespace schro_omp
     // Computational Mathematics, vol 14. Springer, Berlin, Heidelberg.
     // https://doi-org.proxy2.cl.msu.edu/10.1007/978-3-662-09947-6_1
     template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback = NullCallback>
-    bool schrodinger_dirk4s5(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
+    bool schrodinger_dirk4s5(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_imag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
     {
         const int n = mesh.elements.size();
         const real alpha = 0.25 * opts.dt;
@@ -146,7 +146,7 @@ namespace schro_omp
         v_wrapper<real> p;
         p.values.resize(2);
         p[0] = solution_wrapper<real>(std::move(psi_real));
-        p[1] = solution_wrapper<real>(std::move(psi_nimag));
+        p[1] = solution_wrapper<real>(std::move(psi_imag));
 
         v_wrapper<real> zeros = real(0) * p;
 
@@ -166,7 +166,7 @@ namespace schro_omp
 
             unmask(y[0].values, mesh); unmask(y[1].values, mesh);
 
-            #pragma omp parallel for if(n > 63) schedule(dynamic)
+            #pragma omp parallel for if(n > 63) schedule(static)
             for (int i=0; i < n; ++i)
             {
                 matrix<real> u = std::move(y[0].values[i]);
@@ -188,7 +188,7 @@ namespace schro_omp
 
             unmask(y[0].values, mesh); unmask(y[1].values, mesh);
 
-            #pragma omp parallel for if(n > 63) schedule(dynamic)
+            #pragma omp parallel for if(n > 63) schedule(static)
             for (int i=0; i < n; ++i)
             {
                 matrix<real> u = std::move(y[0].values[i]);
@@ -279,7 +279,7 @@ namespace schro_omp
             std::cout << "\n";
 
         psi_real = std::move(p[0].values);
-        psi_nimag = std::move(p[1].values);
+        psi_imag = std::move(p[1].values);
 
         return success;
     }
@@ -292,7 +292,7 @@ namespace schro_omp
     // Computational Mathematics, vol 14. Springer, Berlin, Heidelberg.
     // https://doi-org.proxy2.cl.msu.edu/10.1007/978-3-662-09947-6_1
     template <std::floating_point real, std::invocable<std::vector<matrix<real>>, std::vector<matrix<real>>> Callback = NullCallback>
-    bool schrodinger_dirk4s3(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_nimag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
+    bool schrodinger_dirk4s3(std::vector<matrix<real>>& psi_real, std::vector<matrix<real>>& psi_imag, const std::vector<matrix<real>>& potential, const Mesh<real>& mesh, real T, const solver_opts<real>& opts, Callback callback = NullCallback{})
     {
         constexpr real gamma = std::cos(M_PI/18.0) / std::sqrt(3.0) + 0.5;
         constexpr real delta = 1.0 / 6.0 / std::pow(2*gamma - 1, 2);
@@ -305,7 +305,7 @@ namespace schro_omp
         v_wrapper<real> p;
         p.values.resize(2);
         p[0] = solution_wrapper<real>(std::move(psi_real));
-        p[1] = solution_wrapper<real>(std::move(psi_nimag));
+        p[1] = solution_wrapper<real>(std::move(psi_imag));
 
         v_wrapper<real> zeros = 0 * p;
 
@@ -325,7 +325,7 @@ namespace schro_omp
 
             unmask(y[0].values, mesh); unmask(y[1].values, mesh);
 
-            #pragma omp parallel for if(n > 63) schedule(dynamic)
+            #pragma omp parallel for if(n > 63) schedule(static)
             for (int i=0; i < n; ++i)
             {
                 matrix<real> u = std::move(y[0].values[i]);
@@ -347,7 +347,7 @@ namespace schro_omp
 
             unmask(y[0].values, mesh); unmask(y[1].values, mesh);
 
-            #pragma omp parallel for if(n > 63) schedule(dynamic)
+            #pragma omp parallel for if(n > 63) schedule(static)
             for (int i=0; i < n; ++i)
             {
                 matrix<real> u = std::move(y[0].values[i]);
@@ -410,16 +410,16 @@ namespace schro_omp
 
             bool please_stop = callback(p[0].values, p[1].values);
             if (please_stop)
-                return true;
+                break;
         }
 
         if (opts.verbose)
             std::cout << std::endl;
 
         psi_real = std::move(p[0].values);
-        psi_nimag = std::move(p[1].values);
+        psi_imag = std::move(p[1].values);
 
-        return true;
+        return success;
     }
 } // namespace schro_omp
 

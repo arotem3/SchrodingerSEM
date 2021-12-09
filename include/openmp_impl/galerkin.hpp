@@ -46,7 +46,7 @@ namespace schro_omp
 
         const auto& w = mesh.quadrature.w;
 
-        #pragma omp parallel for if(u.size() > 63) schedule(dynamic) 
+        #pragma omp parallel for if(u.size() > 63) schedule(static) 
         for (int e=0; e < u.size(); ++e)
             u[e] = (arma::diagmat(w) * u[e] * arma::diagmat(w)) % mesh.elements[e].J;
 

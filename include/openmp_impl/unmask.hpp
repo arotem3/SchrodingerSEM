@@ -43,12 +43,12 @@ namespace schro_omp
     template <std::floating_point real>
     void unmask(std::vector<matrix<real>>& a, const Mesh<real>& mesh)
     {
-        #pragma omp parallel for if(mesh.edges.size() > 63) schedule(dynamic) 
+        #pragma omp parallel for if(mesh.edges.size() > 63) schedule(static) 
         for (auto it = mesh.edges.cbegin(); it != mesh.edges.cend(); ++it)
             if (it->edge_type != BOUNDARY)
                 unmask_side(a, *it, mesh);
         
-        #pragma omp parallel for if(mesh.nodes.size() > 63) schedule(dynamic) 
+        #pragma omp parallel for if(mesh.nodes.size() > 63) schedule(static) 
         for (auto it = mesh.nodes.cbegin(); it != mesh.nodes.cend(); ++it)
             if (it->corner_type != BOUNDARY)
                 unmask_node(a, *it, mesh);

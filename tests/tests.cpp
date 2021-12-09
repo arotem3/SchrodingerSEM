@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <omp.h>
+
 bool test_gauss_lobatto();
 bool test_derivative_matrix();
 bool test_Quad();
@@ -18,6 +20,9 @@ bool test_schrodinger_dirk4s5();
 int main()
 {
     bool success = true;
+
+    omp_set_num_threads(1);
+    omp_set_dynamic(false);
     
     success = test_gauss_lobatto()       && success;
     success = test_derivative_matrix()   && success;

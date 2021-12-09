@@ -18,11 +18,11 @@ namespace schro_omp
     {
         auto always_true = [](int e) -> bool {return true;};
 
-        #pragma omp parallel for if(mesh.edges.size() > 63) schedule(dynamic) 
+        #pragma omp parallel for if(mesh.edges.size() > 63) schedule(static) 
         for (auto it = mesh.edges.cbegin(); it != mesh.edges.cend(); ++it)
             mask_side(a, *it, mesh, always_true);
 
-        #pragma omp parallel for if(mesh.edges.size() > 63) schedule(dynamic) 
+        #pragma omp parallel for if(mesh.edges.size() > 63) schedule(static) 
         for (auto it = mesh.nodes.cbegin(); it != mesh.nodes.cend(); ++it)
             mask_node(a, *it, always_true);
     }

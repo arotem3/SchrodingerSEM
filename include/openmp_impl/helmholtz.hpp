@@ -38,7 +38,7 @@ namespace schro_omp
                     [&c](std::vector<matrix<real>>& u, const Mesh<real>& mesh) -> void
                     {
                         const auto& w = mesh.quadrature.w;
-                        #pragma omp parallel for if(u.size() > 63) schedule(dynamic) 
+                        #pragma omp parallel for if(u.size() > 63) schedule(static) 
                         for (int i=0; i < u.size(); ++i)
                         {
                             matrix<real> cuv = ( arma::diagmat(w) * (u[i]%c[i]) * arma::diagmat(w) ) % mesh.elements[i].J;
