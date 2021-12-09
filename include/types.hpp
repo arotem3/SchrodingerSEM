@@ -12,6 +12,11 @@ using matrix = arma::Mat<T>;
 template <typename T>
 using mvec = arma::Col<T>;
 
+// #include <map>
+
+// template <typename T>
+// using SparseData = std::map<int, T>;
+
 #include <unordered_map>
 
 template <typename T>

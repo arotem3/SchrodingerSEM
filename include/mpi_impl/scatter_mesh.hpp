@@ -29,9 +29,9 @@ namespace schro_mpi
 
             mpi::broadcast(comm, mesh.e2p, rootProcessor);
 
-            std::vector< std::unordered_map<int,CornerNode<real>> > needed_corners(num_proc);
-            std::vector< std::unordered_map<int,Quad<real>> >       needed_elements(num_proc);
-            std::vector< std::unordered_map<int,Edge> >             needed_edges(num_proc);
+            std::vector< SparseData<CornerNode<real>> > needed_corners(num_proc);
+            std::vector< SparseData<Quad<real>> >       needed_elements(num_proc);
+            std::vector< SparseData<Edge> >             needed_edges(num_proc);
 
             for (int i=0; i < super_mesh.elements.size(); ++i)
             {

@@ -6,7 +6,7 @@ bool test_solution_wrapper(mpi::communicator& comm)
 {
     bool success = true;
     if (comm.rank() == 0) {
-        std::unordered_map<int, arma::mat> m;
+        SparseData<arma::mat> m;
         m[1] = arma::ones(2,2);
         m[2] = arma::ones(2,2);
         m[4] = arma::ones(2,2);

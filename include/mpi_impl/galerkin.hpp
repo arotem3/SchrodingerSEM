@@ -46,8 +46,8 @@ namespace schro_mpi
         unmask<real>(u, mesh);
         
         const auto& w = mesh.quadrature.w;
-        for (auto& [el, values] : u)
-            values = ( arma::diagmat(w) * values * arma::diagmat(w) ) % mesh.elements.at(el).J;
+        for (auto& [e, element] : mesh.elements)
+            u.at(e) = ( arma::diagmat(w) * u.at(e) * arma::diagmat(w) ) % element.J;
 
         global_sum<real>(u, mesh);
         mask<real>(u, mesh);

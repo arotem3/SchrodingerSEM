@@ -9,6 +9,9 @@ bool test_solution_wrapper(mpi::communicator&);
 bool test_scatter_mesh(mpi::communicator&);
 bool test_helmholtz(mpi::communicator&);
 bool test_v_wrapper(mpi::communicator&);
+bool test_schrodinger_bdf2(mpi::communicator&);
+bool test_schrodinger_dirk4s3(mpi::communicator&);
+bool test_schrodinger_dirk4s5(mpi::communicator&);
 
 int main(int argc, char* argv[])
 {
@@ -17,12 +20,15 @@ int main(int argc, char* argv[])
 
     bool success = true;
 
-    success = test_dot(comm)                && success;
-    success = test_solution_wrapper(comm)   && success;
-    success = test_scatter_mesh(comm)       && success;
-    success = test_poisson(comm)            && success;
-    success = test_helmholtz(comm)          && success;
-    success = test_v_wrapper(comm)          && success;
+    success = test_solution_wrapper(comm)    && success;
+    success = test_v_wrapper(comm)           && success;
+    success = test_scatter_mesh(comm)        && success;
+    success = test_dot(comm)                 && success;
+    success = test_poisson(comm)             && success;
+    success = test_helmholtz(comm)           && success;
+    success = test_schrodinger_bdf2(comm)    && success;
+    success = test_schrodinger_dirk4s3(comm) && success;
+    success = test_schrodinger_dirk4s5(comm) && success;
 
     if (success)
         if (comm.rank() == 0)

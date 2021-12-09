@@ -6,8 +6,8 @@ bool test_v_wrapper(mpi::communicator& comm)
 {
     bool success = true;
     if (comm.rank() == 0) {
-        std::unordered_map<int, arma::mat> u;
-        std::unordered_map<int, arma::mat> v;
+        SparseData<arma::mat> u;
+        SparseData<arma::mat> v;
         for (int i : {1, 2, 4})
         {
             u[i] = arma::ones(2,2);
